@@ -23,7 +23,5 @@ target_link_libraries(kss2wav kss)
 
 if(EMSCRIPTEN)
   set (CMAKE_EXE_LINKER_FLAGS "-O3")
-  set_source_files_properties(src/kssplay.c PROPERTIES COMPILE_FLAGS "-s EXPORTED_FUNCTIONS=\"['_KSSPLAY_new','_KSSPLAY_reset','_KSSPLAY_set_data','_KSSPLAY_delete','_KSSPLAY_calc']\"")
-  set_source_files_properties(src/kss/kss.c PROPERTIES COMPILE_FLAGS "-s EXPORTED_FUNCTIONS=\"['_KSS_new','_KSS_delete','_KSS_bin2kss']\"")
 endif()
 
