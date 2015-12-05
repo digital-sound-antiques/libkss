@@ -30,3 +30,9 @@
 
 # Debug files
 *.dSYM/
+
+# OSX metadata
+.DS_Store
+
+# Build directory
+build/

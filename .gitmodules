@@ -1,0 +1,18 @@
+[submodule "modules/emu2212"]
+	path = modules/emu2212
+	url = https://github.com/okaxaki/emu2212.git
+[submodule "modules/emu2413"]
+	path = modules/emu2413
+	url = https://github.com/okaxaki/emu2413.git
+[submodule "modules/emu2149"]
+	path = modules/emu2149
+	url = https://github.com/okaxaki/emu2149.git
+[submodule "modules/emu76489"]
+	path = modules/emu76489
+	url = https://github.com/okaxaki/emu76489.git
+[submodule "modules/emu8950"]
+	path = modules/emu8950
+	url = https://github.com/okaxaki/emu8950.git
+[submodule "modules/kmz80"]
+	path = modules/kmz80
+	url = https://github.com/okaxaki/kmz80.git
