@@ -10,6 +10,7 @@ The following step builds `libkss.a` library.
 ```
 $ git clone https://github.com/okaxaki/libkss.git
 $ cd libkss
+$ git submodule update --init --recursive
 $ mkdir build; cd build
 $ cmake ..
 $ make
