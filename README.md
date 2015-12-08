@@ -8,7 +8,7 @@ Supported formats are .kss, .mgs, .bgm, .opx, .mbm.
 The following step builds `libkss.a` library.
 
 ```
-$ git clone https://github.com/okaxaki/libkss.git
+$ git clone https://github.com/digital-sound-antiques/libkss.git
 $ cd libkss
 $ git submodule update --init --recursive
 $ mkdir build; cd build
