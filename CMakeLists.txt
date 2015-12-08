@@ -18,10 +18,5 @@ set(CMAKE_C_FLAGS "-Wall")
 add_library(kss STATIC ${SOURCES})
 target_link_libraries(kss emu2149 emu2212 emu2413 emu8950 emu76489 kmz80)
 
-add_executable(kss2wav src/kss2wav.c)
+add_executable(kss2wav EXCLUDE_FROM_ALL src/kss2wav.c)
 target_link_libraries(kss2wav kss)
-
-if(EMSCRIPTEN)
-  set (CMAKE_EXE_LINKER_FLAGS "-O3")
-endif()
-
