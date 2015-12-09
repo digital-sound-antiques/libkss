@@ -282,31 +282,3 @@ KSS *KSS_bin2kss(k_uint8 *data, k_uint32 data_size, const char *filename)
   return kss;
 }
 
-/**
-void KSS_info2pls(KSS *kss, char *base, int i, char *buf, int buflen, int playtime, int fadetime) {
-  
-  int j=0; char *p;
-
-  if(kss->info_num<=i)
-    _snprintf(buf,buflen,"Error!");
-  else {
-    playtime = kss->info[i].time_in_ms>=0?kss->info[i].time_in_ms:playtime;
-    fadetime = kss->info[i].fade_in_ms>=0?kss->info[i].fade_in_ms:fadetime;
-    j+=_snprintf(buf+j,buflen-j,"%s::KSS,%d,",base,kss->info[i].song);
-    p = kss->info[i].title;
-    while( j<buflen-2 && *p!='\0' ) {
-      if(*p==',')
-        buf[j++]='\\';
-      else if((0x80<=*p&&*p<=0x9F)||(0xE0<=*p)) 
-        buf[j++]=*(p++);
-      buf[j++]=*(p++);
-    }
-    if(j<buflen)
-      _snprintf(buf+j,buflen-j,",%d,,%d,1\n",playtime/1000,fadetime/1000);
-    buf[buflen-1]='\0';
-  }
-
-}
-*/
-
-
