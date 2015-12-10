@@ -1,4 +1,6 @@
-Copyright (c) 2015, Mitsutaka Okazaki
+# libkss License
+
+Copyright (c) 2015 Mitsutaka Okazaki
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted, provided that the above
@@ -12,6 +14,6 @@ WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN
 ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF
 OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 
-# Exception
-`src/drivers/mgsdrv.h` has been converted from [mgsdrv](http://www.gigamix.jp/mgsdrv/)
-binary. It is **NOT** provided under the license above.
+# mgsdrv.h License
+
+`src/drivers/mgsdrv.h` included in libkss is a copyrighted material of Ain and GIGAMIX. See [MGSDRV](http://www.gigamix.jp/mgsdrv/) for further information.
