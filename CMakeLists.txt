@@ -37,7 +37,6 @@ include_directories(
 )
 
 file(GLOB SOURCES src/*.c src/**/*.c)
-set(CMAKE_C_FLAGS "-Wall")
 
 add_library(kss STATIC ${SOURCES})
 target_link_libraries(kss emu2149 emu2212 emu2413 emu8950 emu76489 kmz80)
