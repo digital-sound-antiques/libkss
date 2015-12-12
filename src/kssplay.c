@@ -76,7 +76,7 @@ static void make_voltable(void)
   }
 }
 
-INLINE static k_int32 apply_volume(k_int32 data, k_int32 vol)
+static inline k_int32 apply_volume(k_int32 data, k_int32 vol)
 {
   return (data * volume_table[(k_uint32)(vol&(KSSPLAY_MUTE-1))]) >> 12 ;
 }
@@ -363,7 +363,7 @@ void KSSPLAY_fade_stop(KSSPLAY *kssplay)
   kssplay->fade = 0 ;
 }
 
-INLINE static k_int32 fader(KSSPLAY *kssplay, k_int32 sample)
+static inline k_int32 fader(KSSPLAY *kssplay, k_int32 sample)
 {
   if(kssplay->fade_flag == KSSPLAY_FADE_OUT)
   {
@@ -384,7 +384,7 @@ INLINE static k_int32 fader(KSSPLAY *kssplay, k_int32 sample)
     return sample ;
 }
 
-INLINE static k_int16 compress(k_int32 wav)
+static inline k_int16 compress(k_int32 wav)
 {
   const k_int32 vt = 32768*8/10 ;
 
@@ -403,14 +403,14 @@ INLINE static k_int16 compress(k_int32 wav)
   return (k_int16)wav ;
 }
 
-INLINE static int clip(int min, int val, int max)
+static inline int clip(int min, int val, int max)
 {
   if(max<val) return max ;
   else if(val<min) return min ;
   else return val ;
 }
 
-INLINE static void calc_mono(KSSPLAY *kssplay, k_int16 *buf, k_uint32 length)
+static inline void calc_mono(KSSPLAY *kssplay, k_int16 *buf, k_uint32 length)
 {
   k_uint32 i;
   k_int32 d;
@@ -466,7 +466,7 @@ INLINE static void calc_mono(KSSPLAY *kssplay, k_int16 *buf, k_uint32 length)
 
 }
 
-INLINE static void calc_stereo(KSSPLAY *kssplay, k_int16 *buf, k_uint32 length)
+static inline void calc_stereo(KSSPLAY *kssplay, k_int16 *buf, k_uint32 length)
 {
   k_uint32 i ;
   k_int32 ch[2], b[2], c;

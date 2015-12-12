@@ -169,7 +169,7 @@ static void exec_setup(VM *vm, k_uint32 pc)
 }
 
 /* Set the next event */
-INLINE static void adjust_vsync_cycles(VM *vm)
+static inline void adjust_vsync_cycles(VM *vm)
 {
   vm->vsync_cycles_left+=vm->vsync_cycles_step;
   if(vm->vsync_cycles_left>=vm->vsync_freq)

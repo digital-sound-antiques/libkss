@@ -11,12 +11,12 @@
 #define MAX_RATE 96000
 #define MAX_PATH 256
 
-static void WORD(char *buf, e_uint32 data) {
+static void WORD(char *buf, k_uint32 data) {
   buf[0] = data & 0xff ;
   buf[1] = (data & 0xff00) >> 8 ;
 }
 
-static void DWORD(char *buf, e_uint32 data) {
+static void DWORD(char *buf, k_uint32 data) {
   buf[0] = data & 0xff ;
   buf[1] = (data & 0xff00) >> 8 ;
   buf[2] = (data & 0xff0000) >> 16 ;
@@ -51,7 +51,7 @@ static void create_wav_header(char *header, int rate, int nch, int bps)
 #define HLPMSG \
   "Usage: kss2wav FILENAME.KSS <Options>\n" \
   "Options: \n" \
-  "  -s<song_num>\n  -p<play_time>\n  -f<fade_time>\n  -l<loop_num>\n  -r<play_freq>\n  -o<outfile>\n"
+  "  -s<song_num>\n  -p<play_time> (sec)\n  -f<fade_time> (sec)\n  -l<loop_num>\n  -r<play_freq>\n  -q<quality> (0 or 1)\n -o<outfile>\n"
 
 int main(int argc, char *argv[])
 {
@@ -61,6 +61,7 @@ int main(int argc, char *argv[])
   int rate = 44100, nch = 1, bps = 16 ;
   int song_num = 0, play_time = 60, fade_time = 5, loop_num = 1 ;
   int data_length = 0, i, t ;
+  int quality = 0;
 
   KSSPLAY *kssplay ;
   KSS *kss ;
@@ -108,6 +109,9 @@ int main(int argc, char *argv[])
       case 'r':
         rate = atoi(argv[i]+2) ;
         break ;
+      case 'q':
+        quality = atoi(argv[i]+2) ;
+        break;
       case 'l':
         loop_num = atoi(argv[i]+2) ;
         if(loop_num==0) loop_num = 256 ;
@@ -167,6 +171,10 @@ int main(int argc, char *argv[])
   kssplay = KSSPLAY_new(rate, nch, bps) ;
   KSSPLAY_set_data(kssplay, kss) ;
   KSSPLAY_reset(kssplay, song_num, 0) ;
+
+  KSSPLAY_set_device_quality(kssplay, EDSC_PSG, quality);
+  KSSPLAY_set_device_quality(kssplay, EDSC_SCC, quality);
+  KSSPLAY_set_device_quality(kssplay, EDSC_OPLL, quality);
 
   /* Create WAV Data */
   for(t=0; t<play_time; t++)
