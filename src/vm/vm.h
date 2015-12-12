@@ -29,7 +29,7 @@ enum { KSS_MAIN_SLOT=0, KSS_BANK_SLOT=1} ;
 typedef struct tagVM VM;
 typedef int (*VM_WIOPROC)(VM *,k_uint32,k_uint32);
 
-typedef struct tagVM
+struct tagVM
 {
   KMZ80_CONTEXT context ;
   KMEVENT kme ;
@@ -69,7 +69,7 @@ typedef struct tagVM
 
   void *fp ;
 
-} VM ;
+};
 
 #define MSX_CLK (3579545)
 enum {VM_PSG_AUTO=0, VM_PSG_AY, VM_PSG_YM};
