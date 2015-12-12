@@ -5,13 +5,13 @@
 
 static k_uint8 MPKDRV106[8192] =
 {
-#include "../drivers/mpk106.h"
+#include "mpk106.h"
 } ;
 static k_uint32 mpkdrv106_size = sizeof(MPKDRV106) ;
 
 static k_uint8 MPKDRV103[8192] =
 {
-#include "../drivers/mpk103.h"
+#include "mpk103.h"
 } ;
 static k_uint32 mpkdrv103_size = sizeof(MPKDRV103) ;
 
