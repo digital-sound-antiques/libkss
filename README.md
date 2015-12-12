@@ -1,7 +1,7 @@
 # LIBKSS
 
 LIBKSS is a music player library for MSX music formats, forked from MSXplug.
-Supported formats are .kss, .mgs, .bgm, .opx, .mbm.
+Supported formats are .kss, .mgs, .bgm, .opx, .mpk, .mbm.
 
 # How to build
 
@@ -19,4 +19,3 @@ You can also build the KSS to WAV converter binary as follows.
 ```
 $ make kss2wav
 ```
-

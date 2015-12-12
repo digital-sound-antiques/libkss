@@ -4,15 +4,11 @@
 #include <string.h>
 #include "kss.h"
 
-#ifdef EMBED_MGSDRV
-static k_uint8  MGSDRV[8192]= {
-#include "../drivers/mgsdrv.h"
-};
+static k_uint8  MGSDRV[0x2000] = 
+{
+#include "mgsdrv.h"
+} ;
 static k_uint32 mgsdrv_size = sizeof(MGSDRV) ;
-#else
-static k_uint32 mgsdrv_size ;
-static k_uint8  MGSDRV[8192] ;
-#endif
 
 static k_uint8 mgsdrv_init[0x100] = 
 {
@@ -98,7 +94,7 @@ int KSS_load_mgsdrv(const char *mgsdrv)
   fseek(fp,0,SEEK_END) ;
   mgsdrv_size = ftell(fp) ;
 
-  if(mgsdrv_size>8192)
+  if(mgsdrv_size>sizeof(MGSDRV))
   {
     fclose(fp) ;
     return 1 ;

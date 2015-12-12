@@ -3,16 +3,11 @@
 #include <string.h>
 #include "kss.h"
 
-#ifdef EMBED_KINROU
 static k_uint8 KINROU[8192] =
 {
-#include "../drivers/kinrou5.h"
+#include "kinrou5.h"
 } ;
 static k_uint32 kinrou_size = sizeof(KINROU) ;
-#else
-static k_uint32 kinrou_size ;
-static k_uint8 KINROU[8192] ; 
-#endif
 
 static k_uint8 kinrou_init[0x100] =
 {

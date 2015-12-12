@@ -134,10 +134,11 @@ int main(int argc, char *argv[])
 
   /* If you load following drivers, this program can play MGS, MPK and MuSICA files. */
   /*
-  KSS_load_mgsdrv("D:\\MSX\\MGSDRV.COM") ;
-  KSS_load_mpk106("D:\\MSX\\MPK.BIN") ;
-  KSS_load_mpk103("D:\\MSX\\MPK103.BIN") ;
-  KSS_load_kinrou("D:\\MSX\\KINROU5.DRV") ;
+  KSS_load_mgsdrv("MGSDRV.COM") ;
+  KSS_load_mpk106("MPK.BIN") ;
+  KSS_load_mpk103("MPK103.BIN") ;
+  KSS_load_kinrou("KINROU5.DRV") ;
+  KSS_load_fmbios("FMBIOS.ROM") ;
   */
 
   if((kss=KSS_load_file(argv[1]))== NULL)

@@ -3,27 +3,17 @@
 #include <string.h>
 #include "kss.h"
 
-#ifdef EMBED_MPK106
 static k_uint8 MPKDRV106[8192] =
 {
 #include "../drivers/mpk106.h"
 } ;
 static k_uint32 mpkdrv106_size = sizeof(MPKDRV106) ;
-#else
-static k_uint32 mpkdrv106_size ;
-static k_uint8 MPKDRV106[8192] ;
-#endif
 
-#ifdef EMBED_MPK103
 static k_uint8 MPKDRV103[8192] =
 {
-#include "mpk103.h"
+#include "../drivers/mpk103.h"
 } ;
 static k_uint32 mpkdrv103_size = sizeof(MPKDRV103) ;
-#else
-static k_uint32 mpkdrv103_size ;
-static k_uint8 MPKDRV103[8192] ;
-#endif
 
 static k_uint8 mpk106_init[0x100] =
 {

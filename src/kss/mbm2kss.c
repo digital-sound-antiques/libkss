@@ -56,8 +56,11 @@ static k_uint8 kss_header[KSS_HEADER_SIZE + HEADER_SIZE] = {
 };
 
 static unsigned char *drv_top=0;
-static k_uint8 drv_code[0x8000];
-static int drv_size=0;
+static k_uint8 drv_code[0x8000] = 
+{
+#include "mbr143.h"
+};
+static int drv_size=sizeof(drv_code);
 static int mbplay=0;
 static int mbkload=0;
 static int mbmload=0;

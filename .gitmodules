@@ -16,3 +16,6 @@
 [submodule "modules/kmz80"]
 	path = modules/kmz80
 	url = https://github.com/digital-sound-antiques/kmz80.git
+[submodule "modules/drivers"]
+	path = modules/drivers
+	url = https://github.com/digital-sound-antiques/msx-sound-drivers.git

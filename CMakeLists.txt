@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.4)
-add_definitions("-DEMBED_MGSDRV=1")
 
 set(CMAKE_C_FLAGS "-O3 -Wall")
 
@@ -10,7 +9,15 @@ add_subdirectory(modules/emu8950)
 add_subdirectory(modules/emu76489)
 add_subdirectory(modules/kmz80)
 
-include_directories(modules/kmz80 modules/emu2149 modules/emu2212 modules/emu2413 modules/emu8950 modules/emu76489)
+include_directories(
+	modules/drivers 
+	modules/kmz80 
+	modules/emu2149 
+	modules/emu2212 
+	modules/emu2413 
+	modules/emu8950 
+	modules/emu76489
+)
 
 file(GLOB SOURCES src/*.c src/**/*.c)
 set(CMAKE_C_FLAGS "-Wall")
