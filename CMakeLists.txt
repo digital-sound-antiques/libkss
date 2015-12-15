@@ -2,12 +2,29 @@ cmake_minimum_required(VERSION 3.4)
 
 set(CMAKE_C_FLAGS "-O3 -Wall")
 
-add_subdirectory(modules/emu2149)
-add_subdirectory(modules/emu2212)
-add_subdirectory(modules/emu2413)
-add_subdirectory(modules/emu8950)
-add_subdirectory(modules/emu76489)
-add_subdirectory(modules/kmz80)
+if(NOT TARGET emu2149) 
+	add_subdirectory(modules/emu2149) 
+endif()
+
+if(NOT TARGET emu2212)
+	add_subdirectory(modules/emu2212)
+endif()
+
+if(NOT TARGET emu2413)
+	add_subdirectory(modules/emu2413)
+endif()
+
+if(NOT TARGET emu8950)
+	add_subdirectory(modules/emu8950)
+endif()
+
+if(NOT TARGET emu76489)
+	add_subdirectory(modules/emu76489)
+endif()
+
+if(NOT TARGET kmz80)
+	add_subdirectory(modules/kmz80)
+endif()
 
 include_directories(
 	modules/drivers 
