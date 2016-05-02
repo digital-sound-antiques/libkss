@@ -5,8 +5,7 @@
 extern "C" {
 #endif
 
-typedef struct _tagRCF
-{
+typedef struct _tagRCF {
   uint32_t enable;
   double out;
   double a;

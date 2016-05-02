@@ -5,8 +5,7 @@
 extern "C" {
 #endif
 
-typedef struct _tagFIR
-{
+typedef struct _tagFIR {
   double h[65];
   int32_t buf[65];
   double Wc;

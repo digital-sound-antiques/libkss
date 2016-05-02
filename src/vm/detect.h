@@ -9,7 +9,7 @@ typedef struct __LPDETECT__ {
   int32_t *m_stream_buf;
   int32_t *m_time_buf;
   int32_t m_bidx;
-  int32_t m_blast;                    // 前回チェック時のbidx;
+  int32_t m_blast; // 前回チェック時のbidx;
   int32_t m_wspeed;
   int32_t m_current_time;
   int32_t m_loop_start, m_loop_end;

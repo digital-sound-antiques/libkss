@@ -5,8 +5,7 @@
 extern "C" {
 #endif
 
-typedef struct _tagDCF
-{
+typedef struct _tagDCF {
   uint32_t enable;
   double weight;
   double in, out;
