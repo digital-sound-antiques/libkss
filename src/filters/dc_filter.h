@@ -1,6 +1,8 @@
 #ifndef _DC_FILTER_H_
 #define _DC_FILTER_H_
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

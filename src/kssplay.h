@@ -1,6 +1,8 @@
 #ifndef _KSSPLAY_H_
 #define _KSSPLAY_H_
 
+#include <stdint.h>
+
 #include "filters/filter.h"
 #include "filters/rc_filter.h"
 #include "filters/dc_filter.h"

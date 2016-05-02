@@ -1,6 +1,8 @@
 #ifndef _RC_FILTER_H_
 #define _RC_FILTER_H_
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

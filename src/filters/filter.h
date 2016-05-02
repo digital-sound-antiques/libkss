@@ -1,6 +1,8 @@
 #ifndef _FIR_FILTER_H_
 #define _FIR_FILTER_H_
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

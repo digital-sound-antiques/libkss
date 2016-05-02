@@ -1,6 +1,8 @@
 #ifndef __DETECT_H__
 #define __DETECT_H__
 
+#include <stdint.h>
+
 #ifdef __cplusplus
 extern "C" {
 #endif

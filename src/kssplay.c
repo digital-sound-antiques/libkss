@@ -1,5 +1,4 @@
 /*
- * kssplay.c written by [OK] (okazaki@angel.ne.jp)
  * 2004-05-23 : Patched for GG Stereo by RuRuRu
  */
 #include <stdio.h>
