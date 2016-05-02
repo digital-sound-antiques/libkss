@@ -15,12 +15,12 @@ void RCF_reset(RCF *rcf, double rate, double R, double C)
   rcf->enable = 1;
 }
 
-k_int32 RCF_calc(RCF *rcf, k_int32 wav)
+int32_t RCF_calc(RCF *rcf, int32_t wav)
 {
   if(rcf->enable)
   {
     rcf->out += rcf->a * (wav-rcf->out);
-    return (k_int32)rcf->out;
+    return (int32_t)rcf->out;
   }
   else
   {

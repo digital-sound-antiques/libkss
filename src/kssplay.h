@@ -23,38 +23,38 @@ typedef struct tagKSSPLAY
 {
   KSS *kss ;
 
-  k_uint8 *main_data ;
-  k_uint8 *bank_data ;
+  uint8_t *main_data ;
+  uint8_t *bank_data ;
 
   VM *vm ;
 
-  k_uint32 rate ;
-  k_uint32 nch ;
-  k_uint32 bps ;
+  uint32_t rate ;
+  uint32_t nch ;
+  uint32_t bps ;
 
-  k_uint32 step ;
-  k_uint32 step_rest ;
-  k_uint32 step_left ;
+  uint32_t step ;
+  uint32_t step_rest ;
+  uint32_t step_left ;
 
-  k_int32 master_volume;
-  k_int32 device_volume[EDSC_MAX];
-  k_uint32 device_mute[EDSC_MAX];
-  k_int32 device_pan[EDSC_MAX];
-  k_uint32 device_type[EDSC_MAX];
+  int32_t master_volume;
+  int32_t device_volume[EDSC_MAX];
+  uint32_t device_mute[EDSC_MAX];
+  int32_t device_pan[EDSC_MAX];
+  uint32_t device_type[EDSC_MAX];
   FIR *device_fir[2][EDSC_MAX];
   RCF *rcf[2];
   DCF *dcf[2];
-  k_uint32 lastout[2];
+  uint32_t lastout[2];
 
-  k_uint32 fade ;
-  k_uint32 fade_step ;
-  k_uint32 fade_flag ;
-  k_uint32 silent;
-  k_uint32 silent_limit;
-  k_int32  decoded_length;
+  uint32_t fade ;
+  uint32_t fade_step ;
+  uint32_t fade_flag ;
+  uint32_t silent;
+  uint32_t silent_limit;
+  int32_t  decoded_length;
 
-  k_uint32 cpu_speed ; /* 0: AutoDetect, 1...N: x1 ... xN */
-  k_uint32 vsync_freq ;
+  uint32_t cpu_speed ; /* 0: AutoDetect, 1...N: x1 ... xN */
+  uint32_t vsync_freq ;
 
   int scc_disable;
   int opll_stereo;
@@ -64,7 +64,7 @@ typedef struct tagKSSPLAY
 enum { KSSPLAY_FADE_NONE=0, KSSPLAY_FADE_OUT=1, KSSPLAY_FADE_END=2 } ;
 
 /* Create KSSPLAY object */
-KSSPLAY *KSSPLAY_new(k_uint32 rate, k_uint32 nch, k_uint32 bps) ;
+KSSPLAY *KSSPLAY_new(uint32_t rate, uint32_t nch, uint32_t bps) ;
 
 /* Set KSS data to KSSPLAY object */
 int KSSPLAY_set_data(KSSPLAY *, KSS *kss) ;
@@ -72,45 +72,45 @@ int KSSPLAY_set_data(KSSPLAY *, KSS *kss) ;
 /* Reset KSSPLAY object */
 /* cpu_speed = 0:auto 1:3.58MHz 2:7.16MHz ... */
 /* scc_type = 0:auto 1: standard 2:enhanced */
-void KSSPLAY_reset(KSSPLAY *, k_uint32 song, k_uint32 cpu_speed);
+void KSSPLAY_reset(KSSPLAY *, uint32_t song, uint32_t cpu_speed);
 
 /* Emulate some seconds and Generate Wave data */
-void KSSPLAY_calc(KSSPLAY *, k_int16 *buf, k_uint32 length) ;
+void KSSPLAY_calc(KSSPLAY *, int16_t *buf, uint32_t length) ;
 
 /* Emulate some seconds */
-void KSSPLAY_calc_silent(KSSPLAY *, k_uint32 length) ;
+void KSSPLAY_calc_silent(KSSPLAY *, uint32_t length) ;
 
 /* Delete KSSPLAY object */
 void KSSPLAY_delete(KSSPLAY *) ;
 
 /* Start fadeout */
-void KSSPLAY_fade_start(KSSPLAY *kssplay, k_uint32 fade_time);
+void KSSPLAY_fade_start(KSSPLAY *kssplay, uint32_t fade_time);
 
 /* Stop fadeout */
 void KSSPLAY_fade_stop(KSSPLAY *kssplay);
 
 
-int KSSPLAY_read_memory(KSSPLAY *kssplay, k_uint32 address) ;
+int KSSPLAY_read_memory(KSSPLAY *kssplay, uint32_t address) ;
 
 int KSSPLAY_get_loop_count(KSSPLAY *kssplay) ;
 int KSSPLAY_get_stop_flag(KSSPLAY *kssplay) ;
 int KSSPLAY_get_fade_flag(KSSPLAY *kssplay) ;
 
-void KSSPLAY_set_opll_patch(KSSPLAY *kssplay, k_uint8 *illdata) ;
-void KSSPLAY_set_cpu_speed(KSSPLAY *kssplay, k_uint32 cpu_speed) ;
-void KSSPLAY_set_device_lpf(KSSPLAY *kssplay, k_uint32 device, k_uint32 cutoff) ;
-void KSSPLAY_set_device_mute(KSSPLAY *kssplay, k_uint32 devnum, k_uint32 mute);
-void KSSPLAY_set_device_pan(KSSPLAY *kssplay, k_uint32 devnum, k_int32 pan);
-void KSSPLAY_set_channel_pan(KSSPLAY *kssplay, k_uint32 device, k_uint32 ch, k_uint32 pan);
-void KSSPLAY_set_device_quality(KSSPLAY *kssplay, k_uint32 device, k_uint32 quality);
-void KSSPLAY_set_device_volume(KSSPLAY *kssplay, k_uint32 devnum, k_int32 vol);
-void KSSPLAY_set_master_volume(KSSPLAY *kssplay, k_int32 vol);
-void KSSPLAY_set_device_mute(KSSPLAY *kssplay, k_uint32 devnum, k_uint32 mute);
-void KSSPLAY_set_channel_mask(KSSPLAY *kssplay, k_uint32 device, k_uint32 mask);
-void KSSPLAY_set_device_type(KSSPLAY *kssplay, k_uint32 devnum, k_uint32 type);
-void KSSPLAY_set_silent_limit(KSSPLAY *kssplay, k_uint32 time_in_ms);
+void KSSPLAY_set_opll_patch(KSSPLAY *kssplay, uint8_t *illdata) ;
+void KSSPLAY_set_cpu_speed(KSSPLAY *kssplay, uint32_t cpu_speed) ;
+void KSSPLAY_set_device_lpf(KSSPLAY *kssplay, uint32_t device, uint32_t cutoff) ;
+void KSSPLAY_set_device_mute(KSSPLAY *kssplay, uint32_t devnum, uint32_t mute);
+void KSSPLAY_set_device_pan(KSSPLAY *kssplay, uint32_t devnum, int32_t pan);
+void KSSPLAY_set_channel_pan(KSSPLAY *kssplay, uint32_t device, uint32_t ch, uint32_t pan);
+void KSSPLAY_set_device_quality(KSSPLAY *kssplay, uint32_t device, uint32_t quality);
+void KSSPLAY_set_device_volume(KSSPLAY *kssplay, uint32_t devnum, int32_t vol);
+void KSSPLAY_set_master_volume(KSSPLAY *kssplay, int32_t vol);
+void KSSPLAY_set_device_mute(KSSPLAY *kssplay, uint32_t devnum, uint32_t mute);
+void KSSPLAY_set_channel_mask(KSSPLAY *kssplay, uint32_t device, uint32_t mask);
+void KSSPLAY_set_device_type(KSSPLAY *kssplay, uint32_t devnum, uint32_t type);
+void KSSPLAY_set_silent_limit(KSSPLAY *kssplay, uint32_t time_in_ms);
 
-k_uint32 KSSPLAY_get_device_volume(KSSPLAY *kssplay, k_uint32 devnum);
+uint32_t KSSPLAY_get_device_volume(KSSPLAY *kssplay, uint32_t devnum);
 void KSSPLAY_get_MGStext(KSSPLAY *kssplay, char *buf, int max);
 
 #ifdef __cplusplus

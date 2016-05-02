@@ -11,12 +11,12 @@
 #define MAX_RATE 96000
 #define MAX_PATH 256
 
-static void WORD(char *buf, k_uint32 data) {
+static void WORD(char *buf, uint32_t data) {
   buf[0] = data & 0xff ;
   buf[1] = (data & 0xff00) >> 8 ;
 }
 
-static void DWORD(char *buf, k_uint32 data) {
+static void DWORD(char *buf, uint32_t data) {
   buf[0] = data & 0xff ;
   buf[1] = (data & 0xff00) >> 8 ;
   buf[2] = (data & 0xff0000) >> 16 ;
@@ -187,7 +187,7 @@ int main(int argc, char *argv[])
     KSSPLAY_calc(kssplay, wavebuf, rate) ;
     
     /* force little endian (for sparc, powerPC, etc...) */
-    for(i=0; i<rate; i++) WORD((char *)(wavebuf+i), wavebuf[i]) ;
+    for(i=0; i<rate; i++) WORD((char *)(wavebuf+i), wavebuf[i]*2) ;
 
     /* Write 1 sec wave block to file */
     fwrite(wavebuf, sizeof(short), rate, fp) ;

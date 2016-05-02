@@ -1,4 +1,5 @@
-#include "../ksstypes.h"
+#ifndef _FIR_FILTER_H_
+#define _FIR_FILTER_H_
 
 #ifdef __cplusplus
 extern "C" {
@@ -7,17 +8,19 @@ extern "C" {
 typedef struct _tagFIR
 {
   double h[65];
-  k_int32 buf[65];
+  int32_t buf[65];
   double Wc;
-  k_uint32 M;
+  uint32_t M;
 } FIR;
 
 FIR *FIR_new(void);
-k_int32 FIR_calc(FIR *, k_int32 data);
+int32_t FIR_calc(FIR *, int32_t data);
 void FIR_delete(FIR *);
-void FIR_reset(FIR *, k_uint32 sam, k_uint32 cut, k_uint32 n);
+void FIR_reset(FIR *, uint32_t sam, uint32_t cut, uint32_t n);
 void FIR_disable(FIR *);
 
 #ifdef __cplusplus
 }
+#endif
+
 #endif

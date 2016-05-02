@@ -46,9 +46,9 @@ void FIR_disable(FIR *fir)
 }
 
 /* Reset sample rate and cutoff frequency */
-void FIR_reset(FIR *fir, k_uint32 sam, k_uint32 cut, k_uint32 N)
+void FIR_reset(FIR *fir, uint32_t sam, uint32_t cut, uint32_t N)
 {
-  k_uint32 i;
+  uint32_t i;
 
   /* assert(fir); */
   memset(fir->buf, 0, sizeof(fir->buf));
@@ -71,9 +71,9 @@ void FIR_reset(FIR *fir, k_uint32 sam, k_uint32 cut, k_uint32 N)
   }
 }
 
-k_int32 FIR_calc(FIR *fir, k_int32 data)
+int32_t FIR_calc(FIR *fir, int32_t data)
 {
-  k_uint32 i, M = fir->M;
+  uint32_t i, M = fir->M;
   double s;
 
   /* assert(fir); */
@@ -91,7 +91,7 @@ k_int32 FIR_calc(FIR *fir, k_int32 data)
   for(i=1; i<=M; i++)
     s+= fir->h[i] * (fir->buf[M+i]+fir->buf[M-i]);
 
-  return (k_int32)s;
+  return (int32_t)s;
 }
 
 void FIR_delete(FIR *fir)

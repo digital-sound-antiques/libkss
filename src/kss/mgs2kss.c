@@ -4,13 +4,13 @@
 #include <string.h>
 #include "kss.h"
 
-static k_uint8  MGSDRV[0x2000] = 
+static uint8_t  MGSDRV[0x2000] = 
 {
 #include "mgsdrv.h"
 } ;
-static k_uint32 mgsdrv_size = sizeof(MGSDRV) ;
+static uint32_t mgsdrv_size = sizeof(MGSDRV) ;
 
-static k_uint8 mgsdrv_init[0x100] = 
+static uint8_t mgsdrv_init[0x100] = 
 {
   /* FORCE FMPAC RYTHM MUTE */
   0x3E,0x0E,      /* LD A,0EH */
@@ -52,7 +52,7 @@ static k_uint8 mgsdrv_init[0x100] =
   0xC9            /* RET */
 } ;
 
-static k_uint8 mgsdrv_play[0x100] = 
+static uint8_t mgsdrv_play[0x100] = 
 {
   0xCD, 0x1F, 0x60,       /* CALL 0601FH */
   0xDD, 0x2A, 0xF0, 0x7F, /* LD IX,(07FF0H) */
@@ -73,12 +73,12 @@ static k_uint8 mgsdrv_play[0x100] =
   0xC9                    /* RET */
 } ; 
 
-int KSS_isMGSdata(k_uint8 *data, k_uint32 size)
+int KSS_isMGSdata(uint8_t *data, uint32_t size)
 {
   if(size>32&&!strncmp((const char *)data,"MGS",3)) return 1; else return 0;
 }
 
-int KSS_set_mgsdrv(const k_uint8 *data, k_uint32 size)
+int KSS_set_mgsdrv(const uint8_t *data, uint32_t size)
 {
   if(size>8192) return 1 ;
   memcpy(MGSDRV,data,size) ;
@@ -108,9 +108,9 @@ int KSS_load_mgsdrv(const char *mgsdrv)
   return 0 ;
 }
 
-void KSS_get_info_mgsdata(KSS *kss, k_uint8 *data, k_uint32 size)
+void KSS_get_info_mgsdata(KSS *kss, uint8_t *data, uint32_t size)
 {
-  k_uint32 i = 0 , offset = 0 ;
+  uint32_t i = 0 , offset = 0 ;
 
   for(i=0;i<6;i++)
     kss->idstr[i] = data[i] ;
@@ -129,12 +129,12 @@ void KSS_get_info_mgsdata(KSS *kss, k_uint8 *data, k_uint32 size)
   kss->stop_detectable = 1 ;
 }
 
-KSS *KSS_mgs2kss(k_uint8 *data, k_uint32 size)
+KSS *KSS_mgs2kss(uint8_t *data, uint32_t size)
 {  
   KSS *kss ;
-  k_uint8 *buf ;
-  k_uint16 load_adr = 0x200, load_size = 0x8000 + 0x200 - 0x200 ;
-  k_uint16 init_adr = 0x8000, play_adr = init_adr + 0x100 ;
+  uint8_t *buf ;
+  uint16_t load_adr = 0x200, load_size = 0x8000 + 0x200 - 0x200 ;
+  uint16_t init_adr = 0x8000, play_adr = init_adr + 0x100 ;
 
   if(mgsdrv_size==0) return NULL ;
 

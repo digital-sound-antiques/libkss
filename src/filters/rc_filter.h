@@ -1,6 +1,5 @@
 #ifndef _RC_FILTER_H_
 #define _RC_FILTER_H_
-#include "../ksstypes.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -8,13 +7,13 @@ extern "C" {
 
 typedef struct _tagRCF
 {
-  k_uint32 enable;
+  uint32_t enable;
   double out;
   double a;
 } RCF;
 
 RCF *RCF_new(void);
-k_int32 RCF_calc(RCF *, k_int32 data);
+int32_t RCF_calc(RCF *, int32_t data);
 void RCF_delete(RCF *);
 void RCF_reset(RCF *, double rate, double R, double C);
 void RCF_disable(RCF *);

@@ -25,30 +25,30 @@ enum {
 
 typedef struct
 {
-  k_uint8 *top ;
+  uint8_t *top ;
   int size ;  
-  k_uint8 *cur ;
+  uint8_t *cur ;
 
   struct ZIP_LOCAL_HEADER
   {
-	  k_uint32 version;
-  	k_uint32 flag;
-	  k_uint32 method;
-  	k_uint32 time;
-  	k_uint32 crc32;
-  	k_uint32 size_def;
-  	k_uint32 size_inf;
-  	k_uint32 size_fn;
-	  k_uint32 size_ext;
-  	k_uint8  fname[260];
+	  uint32_t version;
+  	uint32_t flag;
+	  uint32_t method;
+  	uint32_t time;
+  	uint32_t crc32;
+  	uint32_t size_def;
+  	uint32_t size_inf;
+  	uint32_t size_fn;
+	  uint32_t size_ext;
+  	uint8_t  fname[260];
   } zlh ;
 
 } ZMFILE ;
 
-static k_uint32 GetWordLE(k_uint8 *p){ return (p[1]<<8)|p[0] ; }
-static k_uint32 GetDwordLE(k_uint8 *p){ return (p[3]<<24)|(p[2]<<16)|(p[1]<<8)|p[0] ; }
+static uint32_t GetWordLE(uint8_t *p){ return (p[1]<<8)|p[0] ; }
+static uint32_t GetDwordLE(uint8_t *p){ return (p[3]<<24)|(p[2]<<16)|(p[1]<<8)|p[0] ; }
 
-static k_uint8 *GetLocalHeader(struct ZIP_LOCAL_HEADER *pzlh, k_uint8 *p)
+static uint8_t *GetLocalHeader(struct ZIP_LOCAL_HEADER *pzlh, uint8_t *p)
 {
 	/* ID */
   if(strncmp(p, "PK\x03\x04", 4)) return NULL ;
@@ -101,9 +101,9 @@ static int zm_nextfile(ZMFILE *zfp)
    return 0 ;
 }
 
-k_uint32 zm_extract(ZMFILE *zfp, void *pbuf)
+uint32_t zm_extract(ZMFILE *zfp, void *pbuf)
 {
-	k_uint8 *p = zfp->cur + 0x1e + zfp->zlh.size_fn + zfp->zlh.size_ext ;
+	uint8_t *p = zfp->cur + 0x1e + zfp->zlh.size_fn + zfp->zlh.size_ext ;
 	z_stream str ;
 	int ret ;
 
@@ -244,7 +244,7 @@ KSS *KSS_load_file(char *fn)
   }
 #endif /* KSS_ZIP_SUPPORT */
 
-  if((kss = KSS_bin2kss((k_uint8 *)read_buf, length, fn))==NULL)
+  if((kss = KSS_bin2kss((uint8_t *)read_buf, length, fn))==NULL)
   {
     free(read_buf) ;
     return NULL ;

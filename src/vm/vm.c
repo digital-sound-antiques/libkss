@@ -13,14 +13,14 @@
 #include "vm.h"
 
 /* Callback functions from KMZ80 */
-static k_uint32 memread(VM *vm, k_uint32 a)
+static uint32_t memread(VM *vm, uint32_t a)
 {
   return MMAP_read_memory(vm->mmap, a) ;
 }
 
-static void memwrite(VM *vm, k_uint32 a, k_uint32 d)
+static void memwrite(VM *vm, uint32_t a, uint32_t d)
 {
-  k_uint32 page = a>>13 ;
+  uint32_t page = a>>13 ;
 
   if(!vm->scc_disable)
   {
@@ -41,20 +41,20 @@ static void memwrite(VM *vm, k_uint32 a, k_uint32 d)
   if((vm->DA8_enable)&&(0x5000<=a&&a<=0x5FFF))
   {
     vm->DA8 >>= 1 ;
-    vm->DA8 += ((k_int32)(d&0xff) - 0x80) << 3 ;
+    vm->DA8 += ((int32_t)(d&0xff) - 0x80) << 3 ;
     LPDETECT_write(vm->lpde, a, d);
   }
   
-  if((vm->bank_mode==KSS_8K)&&((a==0x9000)||(a==0xB000))) 
+  if((vm->bank_mode==BANK_8K)&&((a==0x9000)||(a==0xB000))) 
   {
-    MMAP_select_bank(vm->mmap, page ,KSS_BANK_SLOT,d) ;
+    MMAP_select_bank(vm->mmap, page ,VM_BANK_SLOT,d) ;
   }
 
   MMAP_write_memory(vm->mmap, a, d);
   
 }
 
-static k_uint32 ioread(VM *vm, k_uint32 a)
+static uint32_t ioread(VM *vm, uint32_t a)
 {
   a&=0xff ;
 
@@ -65,13 +65,13 @@ static k_uint32 ioread(VM *vm, k_uint32 a)
   return 0xff;
 }
 
-static void iowrite(VM *vm, k_uint32 a, k_uint32 d)
+static void iowrite(VM *vm, uint32_t a, uint32_t d)
 {
   a &= 0xff ;
 
   if(((a==STOPIO)||(a==LOOPIO)||(a==ADRLIO)||(a==ADRHIO))&&(vm->IO[EXTIO]!=0x7f)) return ;
 
-  vm->IO[a] = (k_uint8)(d&0xff) ;
+  vm->IO[a] = (uint8_t)(d&0xff) ;
 
   if(vm->WIOPROC[a])
     vm->WIOPROC[a](vm, a,d);
@@ -136,23 +136,23 @@ static void iowrite(VM *vm, k_uint32 a, k_uint32 d)
     break ;
   }
 
-  if((vm->bank_mode == KSS_16K)&&(a==0xfe))
+  if((vm->bank_mode == BANK_16K)&&(a==0xfe))
   {
     if((vm->bank_min<=d)&&(d<vm->bank_max))
-      MMAP_select_bank(vm->mmap, 4,KSS_BANK_SLOT,d) ;
+      MMAP_select_bank(vm->mmap, 4,VM_BANK_SLOT,d) ;
     else
-      MMAP_select_bank(vm->mmap, 4,KSS_MAIN_SLOT, 2) ; 
+      MMAP_select_bank(vm->mmap, 4,VM_MAIN_SLOT, 2) ; 
   }
 }
 
-static k_uint32 busread(VM *vm, k_uint32 mode)
+static uint32_t busread(VM *vm, uint32_t mode)
 {
   return 0x38 ;
 }
 
-static void exec_setup(VM *vm, k_uint32 pc)
+static void exec_setup(VM *vm, uint32_t pc)
 {
-  k_uint32 sp = 0xf380, rp ;
+  uint32_t sp = 0xf380, rp ;
 
 
   MMAP_write_memory(vm->mmap,--sp, 0) ;
@@ -230,22 +230,22 @@ void VM_delete(VM *vm)
   free(vm) ;
 }
 
-void VM_exec(VM *vm, k_uint32 cycles)
+void VM_exec(VM *vm, uint32_t cycles)
 {
    kmz80_exec(&vm->context, cycles) ;
 }
 
-void VM_exec_func(VM *vm, k_uint32 func_adr)
+void VM_exec_func(VM *vm, uint32_t func_adr)
 {
   exec_setup(vm, func_adr);
 }
 
-void VM_set_wioproc(VM *vm, k_uint32 a, VM_WIOPROC p)
+void VM_set_wioproc(VM *vm, uint32_t a, VM_WIOPROC p)
 {
   vm->WIOPROC[a] = p;
 }
 
-void VM_set_clock(VM *vm, k_uint32 clock, k_uint32 vsync_freq)
+void VM_set_clock(VM *vm, uint32_t clock, uint32_t vsync_freq)
 {
   vm->clock = clock ;
   vm->vsync_freq = vsync_freq ;
@@ -268,7 +268,7 @@ void VM_reset_device(VM *vm)
   SNG_reset(vm->sng) ;
 }
 
-void VM_set_PSG_type(VM *vm, k_uint32 psg_type)
+void VM_set_PSG_type(VM *vm, uint32_t psg_type)
 {
   if(!vm->psg) return;
 
@@ -281,7 +281,7 @@ void VM_set_PSG_type(VM *vm, k_uint32 psg_type)
   vm->psg_type = psg_type;
 }
 
-void VM_set_SCC_type(VM *vm, k_uint32 scc_type)
+void VM_set_SCC_type(VM *vm, uint32_t scc_type)
 {
   if(!vm->scc) return;
 
@@ -304,7 +304,7 @@ void VM_set_SCC_type(VM *vm, k_uint32 scc_type)
   vm->scc_type = scc_type;
 }
 
-void VM_set_OPLL_type(VM *vm, k_uint32 opll_type)
+void VM_set_OPLL_type(VM *vm, uint32_t opll_type)
 {
   if(!vm->opll) return;
 
@@ -319,12 +319,12 @@ void VM_set_OPLL_type(VM *vm, k_uint32 opll_type)
   vm->opll_type = opll_type;
 }
 
-void VM_set_OPL_type(VM *vm, k_uint32 opl_type)
+void VM_set_OPL_type(VM *vm, uint32_t opl_type)
 {
   vm->opl_type = opl_type;
 }
 
-void VM_reset(VM *vm, k_uint32 clock, k_uint32 init_adr, k_uint32 vsync_adr, k_uint32 vsync_freq, k_uint32 song, k_uint32 DA8)
+void VM_reset(VM *vm, uint32_t clock, uint32_t init_adr, uint32_t vsync_adr, uint32_t vsync_freq, uint32_t song, uint32_t DA8)
 {
   /* Reset KMZ80 */
   kmz80_reset(&vm->context) ;
@@ -343,7 +343,7 @@ void VM_reset(VM *vm, k_uint32 clock, k_uint32 init_adr, k_uint32 vsync_adr, k_u
   vm->context.busread = (void *)busread ;
 
   vm->context.regs8[REGID_M1CYCLE] = 2 ;
-  vm->context.regs8[REGID_A] = (k_uint8)(song&0xff) ;
+  vm->context.regs8[REGID_A] = (uint8_t)(song&0xff) ;
   vm->context.regs8[REGID_HALTED] = 0;
   vm->context.exflag = 3;
   vm->context.regs8[REGID_IFF1] = 0;
@@ -364,10 +364,10 @@ void VM_reset(VM *vm, k_uint32 clock, k_uint32 init_adr, k_uint32 vsync_adr, k_u
   VM_set_clock(vm, clock, vsync_freq);
 }
 
-void VM_init_memory(VM *vm, k_uint32 ram_mode, k_uint32 offset, k_uint32 size, k_uint8 *data)
+void VM_init_memory(VM *vm, uint32_t ram_mode, uint32_t offset, uint32_t size, uint8_t *data)
 {
   int i ;
-  k_uint8 *main_memory ;
+  uint8_t *main_memory ;
   
   assert(vm) ;
   assert(vm->mmap) ;
@@ -390,19 +390,19 @@ void VM_init_memory(VM *vm, k_uint32 ram_mode, k_uint32 offset, k_uint32 size, k
 
   for(i=0;i<4;i++)
   {
-    MMAP_set_bank_data(vm->mmap, KSS_MAIN_SLOT, i, BANK_16K, main_memory + 0x4000 * i) ;
-    MMAP_set_bank_attr(vm->mmap, KSS_MAIN_SLOT, i, BANK_READABLE|BANK_WRITEABLE) ;
-    MMAP_select_bank(vm->mmap, i<<1, KSS_MAIN_SLOT, i) ;
+    MMAP_set_bank_data(vm->mmap, VM_MAIN_SLOT, i, BANK_16K, main_memory + 0x4000 * i) ;
+    MMAP_set_bank_attr(vm->mmap, VM_MAIN_SLOT, i, BANK_READABLE|BANK_WRITEABLE) ;
+    MMAP_select_bank(vm->mmap, i<<1, VM_MAIN_SLOT, i) ;
   }
 
-  if(!ram_mode) MMAP_set_bank_attr(vm->mmap, KSS_MAIN_SLOT, 2, BANK_READABLE) ;
+  if(!ram_mode) MMAP_set_bank_attr(vm->mmap, VM_MAIN_SLOT, 2, BANK_READABLE) ;
 
   free(main_memory) ;
 }
 
-void VM_init_bank(VM *vm, k_uint32 mode, k_uint32 num, k_uint32 offset, k_uint8 *data)
+void VM_init_bank(VM *vm, uint32_t mode, uint32_t num, uint32_t offset, uint8_t *data)
 {
-  k_uint32 size, i ;
+  uint32_t size, i ;
 
   assert(vm) ;
   assert(vm->mmap) ;
@@ -411,17 +411,17 @@ void VM_init_bank(VM *vm, k_uint32 mode, k_uint32 num, k_uint32 offset, k_uint8 
   vm->bank_min = offset ;
   vm->bank_max = offset + num ;
 
-  if(mode==KSS_16K)
+  if(mode==BANK_16K)
   {
     size = 0x4000 ;
     for(i=0;i<num;i++)
-      MMAP_set_bank_data(vm->mmap, KSS_BANK_SLOT, i + offset, BANK_16K, data + i * size) ;
+      MMAP_set_bank_data(vm->mmap, VM_BANK_SLOT, i + offset, BANK_16K, data + i * size) ;
   }
-  else if(mode==KSS_8K)
+  else if(mode==BANK_8K)
   {
     size = 0x2000 ;
     for(i=0;i<num;i++)
-      MMAP_set_bank_data(vm->mmap, KSS_BANK_SLOT, i + offset, BANK_8K, data + i * size) ;
+      MMAP_set_bank_data(vm->mmap, VM_BANK_SLOT, i + offset, BANK_8K, data + i * size) ;
   }
   else
   {

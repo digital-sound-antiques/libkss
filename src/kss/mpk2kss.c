@@ -3,19 +3,19 @@
 #include <string.h>
 #include "kss.h"
 
-static k_uint8 MPKDRV106[8192] =
+static uint8_t MPKDRV106[8192] =
 {
 #include "mpk106.h"
 } ;
-static k_uint32 mpkdrv106_size = sizeof(MPKDRV106) ;
+static uint32_t mpkdrv106_size = sizeof(MPKDRV106) ;
 
-static k_uint8 MPKDRV103[8192] =
+static uint8_t MPKDRV103[8192] =
 {
 #include "mpk103.h"
 } ;
-static k_uint32 mpkdrv103_size = sizeof(MPKDRV103) ;
+static uint32_t mpkdrv103_size = sizeof(MPKDRV103) ;
 
-static k_uint8 mpk106_init[0x100] =
+static uint8_t mpk106_init[0x100] =
 {
   0x0E,0x00,        /* LD C,00H */
   0xCD,0x10,0x40,   /* CALL 04010H */
@@ -38,7 +38,7 @@ static k_uint8 mpk106_init[0x100] =
   0xC9,             /* C9 */
 } ;
 
-static k_uint8 mpk106_play[0x100] =
+static uint8_t mpk106_play[0x100] =
 {
   0xCD,0x13,0x40, /* CALL 04013H */
   0x0E,0x0E,      /* LD C,0EH */
@@ -52,7 +52,7 @@ static k_uint8 mpk106_play[0x100] =
 /*
  * MPK103.BIN --> need to patch: 04364H :: 0x00,0x3E,0x01
  */
-static k_uint8 mpk103_init[0x100] =
+static uint8_t mpk103_init[0x100] =
 {
   0x0E,0x00,        /* LD C,00H */
   0xCD,0x10,0x40,   /* CALL 04010H */
@@ -72,7 +72,7 @@ static k_uint8 mpk103_init[0x100] =
   0xC9,             /* C9 */
 } ;
 
-static k_uint8 mpk103_play[0x100] =
+static uint8_t mpk103_play[0x100] =
 {
   0xCD,0x13,0x40, /* CALL 04013H */
   0x0E,0x0E,      /* LD C,0EH */
@@ -83,7 +83,7 @@ static k_uint8 mpk103_play[0x100] =
 } ;
 
 
-int KSS_isMPK103data(k_uint8 *data, k_uint32 size)
+int KSS_isMPK103data(uint8_t *data, uint32_t size)
 {
   char ver[4] = {0,0,0,0};
 
@@ -97,7 +97,7 @@ int KSS_isMPK103data(k_uint8 *data, k_uint32 size)
   else return 0 ;
 }
 
-int KSS_isMPK106data(k_uint8 *data, k_uint32 size)
+int KSS_isMPK106data(uint8_t *data, uint32_t size)
 {
   char ver[4] = {0,0,0,0};
 
@@ -111,7 +111,7 @@ int KSS_isMPK106data(k_uint8 *data, k_uint32 size)
   else return 0 ;
 }
 
-int KSS_set_mpk106(const k_uint8 *data, k_uint32 size)
+int KSS_set_mpk106(const uint8_t *data, uint32_t size)
 {
   if(size>8192) return 1 ;
   memcpy(MPKDRV106,data,size) ;
@@ -141,7 +141,7 @@ int KSS_load_mpk106(const char *mpkdrv)
   return 0 ;
 }
 
-int KSS_set_mpk103(const k_uint8 *data, k_uint32 size)
+int KSS_set_mpk103(const uint8_t *data, uint32_t size)
 {
   if(size>8192) return 1 ;
   memcpy(MPKDRV103,data,size) ;
@@ -171,9 +171,9 @@ int KSS_load_mpk103(const char *mpkdrv)
   return 0 ;
 }
 
-void KSS_get_info_mpkdata(KSS *kss, k_uint8 *data, k_uint32 size)
+void KSS_get_info_mpkdata(KSS *kss, uint8_t *data, uint32_t size)
 {
-  k_uint32 i, j, offset ;
+  uint32_t i, j, offset ;
   static char extra[3][256] = {"","",""} ;
 
   for(i=0;i<6;i++)
@@ -213,13 +213,13 @@ void KSS_get_info_mpkdata(KSS *kss, k_uint8 *data, k_uint32 size)
   kss->stop_detectable = 1;
 }
 
-KSS *KSS_mpk1062kss(k_uint8 *data, k_uint32 size)
+KSS *KSS_mpk1062kss(uint8_t *data, uint32_t size)
 {
   KSS *kss ;
 
-  k_uint8 *buf ;
-  k_uint16 data_adr, load_adr, load_size ;
-  k_uint16 drv_adr = 0x4000, init_adr = 0x6000, play_adr = 0x6100 ;
+  uint8_t *buf ;
+  uint16_t data_adr, load_adr, load_size ;
+  uint16_t drv_adr = 0x4000, init_adr = 0x6000, play_adr = 0x6100 ;
 
   if(size<16||mpkdrv106_size==0) return NULL ;
 
@@ -254,13 +254,13 @@ KSS *KSS_mpk1062kss(k_uint8 *data, k_uint32 size)
   return kss ;
 }
 
-KSS *KSS_mpk1032kss(k_uint8 *data, k_uint32 size)
+KSS *KSS_mpk1032kss(uint8_t *data, uint32_t size)
 {
   KSS *kss ;
 
-  k_uint8 *buf ;
-  k_uint16 data_adr, load_adr, load_size ;
-  k_uint16 drv_adr = 0x4000, init_adr = 0x6000, play_adr = 0x6100 ;
+  uint8_t *buf ;
+  uint16_t data_adr, load_adr, load_size ;
+  uint16_t drv_adr = 0x4000, init_adr = 0x6000, play_adr = 0x6100 ;
 
   if(size<16||mpkdrv103_size==0) return NULL ;
 

@@ -3,11 +3,11 @@
 #include <string.h>
 #include "kss.h"
 
-static k_uint32 readDwordLE(k_uint8 *data) {  
+static uint32_t readDwordLE(uint8_t *data) {  
   return (data[3]<<24) | (data[2]<<16) | (data[1]<<8) | data[0];
 }
 
-KSS *KSS_new(k_uint8 *data, k_uint32 size)
+KSS *KSS_new(uint8_t *data, uint32_t size)
 {
    KSS *kss ;
 
@@ -42,7 +42,7 @@ void KSS_delete(KSS *kss)
   }
 }
 
-int KSS_check_type(k_uint8 *data, k_uint32 size, const char *filename)
+int KSS_check_type(uint8_t *data, uint32_t size, const char *filename)
 {
   char * p;
 
@@ -66,20 +66,20 @@ int KSS_check_type(k_uint8 *data, k_uint32 size, const char *filename)
   return KSS_TYPE_UNKNOWN;
 }
 
-void KSS_make_header(k_uint8 *header, k_uint16 load_adr, k_uint16 load_size, k_uint16 init_adr, k_uint16 play_adr)
+void KSS_make_header(uint8_t *header, uint16_t load_adr, uint16_t load_size, uint16_t init_adr, uint16_t play_adr)
 {
   header[0x00] = 'K' ;
   header[0x01] = 'S' ;
   header[0x02] = 'S' ;
   header[0x03] = 'X' ;
-  header[0x04] = (k_uint8)(load_adr & 0xff) ;
-  header[0x05] = (k_uint8)(load_adr >> 8) ;
-  header[0x06] = (k_uint8)(load_size & 0xff) ;
-  header[0x07] = (k_uint8)(load_size >> 8) ;
-  header[0x08] = (k_uint8)(init_adr & 0xff) ;
-  header[0x09] = (k_uint8)(init_adr >> 8);
-  header[0x0A] = (k_uint8)(play_adr & 0xff);
-  header[0x0B] = (k_uint8)(play_adr >> 8);
+  header[0x04] = (uint8_t)(load_adr & 0xff) ;
+  header[0x05] = (uint8_t)(load_adr >> 8) ;
+  header[0x06] = (uint8_t)(load_size & 0xff) ;
+  header[0x07] = (uint8_t)(load_size >> 8) ;
+  header[0x08] = (uint8_t)(init_adr & 0xff) ;
+  header[0x09] = (uint8_t)(init_adr >> 8);
+  header[0x0A] = (uint8_t)(play_adr & 0xff);
+  header[0x0B] = (uint8_t)(play_adr >> 8);
   
   header[0x0C] = 0x00 ;
   header[0x0D] = 0x00 ;
@@ -105,7 +105,7 @@ static void get_legacy_header(KSS *kss)
     kss->device_flag = kss->data[0x0F] ;
 }
 
-static void check_device(KSS *kss, k_uint32 flag)
+static void check_device(KSS *kss, uint32_t flag)
 {
   kss->sn76489 = flag & 2 ;
   if(flag&2)
@@ -133,13 +133,13 @@ static void check_device(KSS *kss, k_uint32 flag)
   }
 }
 
-static k_uint8 guarded_read(k_uint8 *data, k_uint32 pos, k_uint32 size) {
+static uint8_t guarded_read(uint8_t *data, uint32_t pos, uint32_t size) {
   if(pos<size) return data[pos]; else return 0;
 }
 
 static void scan_info(KSS *kss)
 {
-  k_uint32 i,j,k;
+  uint32_t i,j,k;
 
   if(strncmp("KSCC", (const char *)(kss->data), 4)==0)
   {
@@ -225,7 +225,7 @@ static void msx_kanji_fix(unsigned char *title)
   return;
 }
 
-KSS *KSS_bin2kss(k_uint8 *data, k_uint32 data_size, const char *filename)
+KSS *KSS_bin2kss(uint8_t *data, uint32_t data_size, const char *filename)
 {
   KSS *kss;
   int type;

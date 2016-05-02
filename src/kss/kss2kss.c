@@ -3,7 +3,7 @@
 #include <string.h>
 #include "kss.h"
 
-static void get_information(KSS *kss, k_uint8 *data, k_uint32 size)
+static void get_information(KSS *kss, uint8_t *data, uint32_t size)
 {
   int i;
 
@@ -45,10 +45,10 @@ static void get_information(KSS *kss, k_uint8 *data, k_uint32 size)
   return ;
 }
 
-void KSS_get_info_kssdata(KSS *kss, k_uint8 *data, k_uint32 size)
+void KSS_get_info_kssdata(KSS *kss, uint8_t *data, uint32_t size)
 {
   int i;
-  k_uint16 header_size ;
+  uint16_t header_size ;
 
   if(size<16) return ;
 
@@ -69,7 +69,7 @@ void KSS_get_info_kssdata(KSS *kss, k_uint8 *data, k_uint32 size)
   kss->type = KSSDATA;
 }
 
-KSS *KSS_kss2kss(k_uint8 *data, k_uint32 size )
+KSS *KSS_kss2kss(uint8_t *data, uint32_t size )
 {
   KSS *kss ;
 

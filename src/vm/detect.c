@@ -45,7 +45,7 @@ LPDETECT_reset(LPDETECT *__this)
 }
 
 int
-LPDETECT_write(LPDETECT *__this, k_uint32 adr, k_uint32 val)
+LPDETECT_write(LPDETECT *__this, uint32_t adr, uint32_t val)
 {
   __this->m_empty = 0; /* false */
   __this->m_time_buf[__this->m_bidx] = __this->m_current_time;
@@ -55,7 +55,7 @@ LPDETECT_write(LPDETECT *__this, k_uint32 adr, k_uint32 val)
 }
 
 int 
-LPDETECT_count(LPDETECT *__this, k_int32 time_in_ms)
+LPDETECT_count(LPDETECT *__this, int32_t time_in_ms)
 {
   if((__this->m_loop_end-__this->m_loop_start)<=0) return 0;
   if(time_in_ms < __this->m_loop_end) return 0;
@@ -64,7 +64,7 @@ LPDETECT_count(LPDETECT *__this, k_int32 time_in_ms)
 }
 
 int 
-LPDETECT_update(LPDETECT *__this, k_int32 time_in_ms, k_int32 match_second, k_int32 match_interval)
+LPDETECT_update(LPDETECT *__this, int32_t time_in_ms, int32_t match_second, int32_t match_interval)
 {
   int i, j;
   int match_size, match_length;

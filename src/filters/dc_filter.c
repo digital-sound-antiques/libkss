@@ -7,13 +7,13 @@ DCF* DCF_new()
   return malloc(sizeof(DCF));
 }
 
-k_int32 DCF_calc(DCF *dcf, k_int32 data)
+int32_t DCF_calc(DCF *dcf, int32_t data)
 {
   if(dcf->enable)
   {
     dcf->out = dcf->weight * ( dcf->out + data - dcf->in );
     dcf->in = data;
-    return (k_int32)dcf->out;
+    return (int32_t)dcf->out;
   }
   else
   {

@@ -9,11 +9,11 @@
 #include <assert.h>
 #include "kssplay.h"
 
-static k_int32 volume_table[1<<KSSPLAY_VOL_BITS] ;
+static int32_t volume_table[1<<KSSPLAY_VOL_BITS] ;
 
 static int mgs_pos = 0;
 static char mgs_text[256];
-static int mgs_text_update(VM *vm, k_uint32 a, k_uint32 d)
+static int mgs_text_update(VM *vm, uint32_t a, uint32_t d)
 {
   char buf[128]="";
   int adr, i,j;
@@ -70,20 +70,20 @@ static void make_voltable(void)
   for(i=KSSPLAY_VOL_MIN;i<=KSSPLAY_VOL_MAX;i++)
   {
     if(i>=0)
-      volume_table[i] = (k_int32)((1<<12)*pow(2,i/(6.0/KSSPLAY_VOL_STEP))) ;
+      volume_table[i] = (int32_t)((1<<12)*pow(2,i/(6.0/KSSPLAY_VOL_STEP))) ;
     else
-      volume_table[KSSPLAY_MUTE+i] = (k_int32)((1<<12)*pow(2,i/(6.0/KSSPLAY_VOL_STEP))) ;
+      volume_table[KSSPLAY_MUTE+i] = (int32_t)((1<<12)*pow(2,i/(6.0/KSSPLAY_VOL_STEP))) ;
   }
 }
 
-static inline k_int32 apply_volume(k_int32 data, k_int32 vol)
+static inline int32_t apply_volume(int32_t data, int32_t vol)
 {
-  return (data * volume_table[(k_uint32)(vol&(KSSPLAY_MUTE-1))]) >> 12 ;
+  return (data * volume_table[(uint32_t)(vol&(KSSPLAY_MUTE-1))]) >> 12 ;
 }
 
 int KSSPLAY_set_data(KSSPLAY *kssplay, KSS *kss)
 {
-  k_uint32 logical_size, header_size ;
+  uint32_t logical_size, header_size ;
   int i ;
 
   if(kss->kssx)
@@ -132,7 +132,7 @@ int KSSPLAY_set_data(KSSPLAY *kssplay, KSS *kss)
   return 0 ;
 }
 
-static k_uint32 getclk(KSSPLAY *kssplay)
+static uint32_t getclk(KSSPLAY *kssplay)
 {
   if(kssplay->cpu_speed == 0)
   {
@@ -157,13 +157,13 @@ void KSSPLAY_get_MGStext(KSSPLAY *kssplay, char *buf, int max)
   buf[max-1] ='\0';
 }
 
-void KSSPLAY_set_speed(KSSPLAY *kssplay, k_uint32 cpu_speed)
+void KSSPLAY_set_speed(KSSPLAY *kssplay, uint32_t cpu_speed)
 {
   kssplay->cpu_speed = cpu_speed ;
   VM_set_clock(kssplay->vm, getclk(kssplay), kssplay->vsync_freq) ;
 }
 
-void KSSPLAY_set_device_type(KSSPLAY *kssplay, k_uint32 devnum, k_uint32 type)
+void KSSPLAY_set_device_type(KSSPLAY *kssplay, uint32_t devnum, uint32_t type)
 {
   if(!kssplay->vm) return;
 
@@ -184,7 +184,7 @@ void KSSPLAY_set_device_type(KSSPLAY *kssplay, k_uint32 devnum, k_uint32 type)
   kssplay->device_type[devnum] = type;
 }
 
-void KSSPLAY_reset(KSSPLAY *kssplay, k_uint32 song, k_uint32 cpu_speed)
+void KSSPLAY_reset(KSSPLAY *kssplay, uint32_t song, uint32_t cpu_speed)
 {
   int i;
 
@@ -213,7 +213,7 @@ void KSSPLAY_reset(KSSPLAY *kssplay, k_uint32 song, k_uint32 cpu_speed)
   memset(mgs_text,0,128);
 }
 
-KSSPLAY *KSSPLAY_new(k_uint32 rate, k_uint32 nch, k_uint32 bps)
+KSSPLAY *KSSPLAY_new(uint32_t rate, uint32_t nch, uint32_t bps)
 {
   KSSPLAY *kssplay ;
   int i,j ;
@@ -251,7 +251,7 @@ KSSPLAY *KSSPLAY_new(k_uint32 rate, k_uint32 nch, k_uint32 bps)
   return kssplay ;
 }
 
-void KSSPLAY_set_device_quality(KSSPLAY *kssplay, k_uint32 devnum, k_uint32 quality)
+void KSSPLAY_set_device_quality(KSSPLAY *kssplay, uint32_t devnum, uint32_t quality)
 {
   switch(devnum)
   {
@@ -270,27 +270,27 @@ void KSSPLAY_set_device_quality(KSSPLAY *kssplay, k_uint32 devnum, k_uint32 qual
   }
 }
 
-void KSSPLAY_set_device_mute(KSSPLAY *kssplay, k_uint32 devnum, k_uint32 mute)
+void KSSPLAY_set_device_mute(KSSPLAY *kssplay, uint32_t devnum, uint32_t mute)
 {
   if(devnum<EDSC_MAX) kssplay->device_mute[devnum] = mute;
 }
 
-k_uint32 KSSPLAY_get_device_volume(KSSPLAY *kssplay, k_uint32 devnum)
+uint32_t KSSPLAY_get_device_volume(KSSPLAY *kssplay, uint32_t devnum)
 {
   if(devnum<EDSC_MAX) return kssplay->device_volume[devnum];
   else return 0;
 }
 
-void KSSPLAY_set_device_volume(KSSPLAY *kssplay, k_uint32 devnum, k_int32 vol)
+void KSSPLAY_set_device_volume(KSSPLAY *kssplay, uint32_t devnum, int32_t vol)
 {
   if(devnum<EDSC_MAX) kssplay->device_volume[devnum] = vol ;
 }
-void KSSPLAY_set_master_volume(KSSPLAY *kssplay, k_int32 vol)
+void KSSPLAY_set_master_volume(KSSPLAY *kssplay, int32_t vol)
 {
   kssplay->master_volume = vol ;
 }
 
-void KSSPLAY_set_channel_pan(KSSPLAY *kssplay, k_uint32 device, k_uint32 ch, k_uint32 pan)
+void KSSPLAY_set_channel_pan(KSSPLAY *kssplay, uint32_t device, uint32_t ch, uint32_t pan)
 {
 	switch(device)
 	{
@@ -303,12 +303,12 @@ void KSSPLAY_set_channel_pan(KSSPLAY *kssplay, k_uint32 device, k_uint32 ch, k_u
 	}
 }
 
-void KSSPLAY_set_device_pan(KSSPLAY *kssplay, k_uint32 device, k_int32 pan)
+void KSSPLAY_set_device_pan(KSSPLAY *kssplay, uint32_t device, int32_t pan)
 {
   kssplay->device_pan[device] = pan;
 }
 
-void KSSPLAY_set_device_lpf(KSSPLAY *kssplay, k_uint32 device, k_uint32 cutoff)
+void KSSPLAY_set_device_lpf(KSSPLAY *kssplay, uint32_t device, uint32_t cutoff)
 {
   FIR_reset(kssplay->device_fir[0][device], kssplay->rate, cutoff, 31);
   FIR_reset(kssplay->device_fir[1][device], kssplay->rate, cutoff, 31);
@@ -341,12 +341,12 @@ int KSSPLAY_get_fade_flag(KSSPLAY *kssplay)
 #define FADE_BIT 8
 #define FADE_BASE_BIT 23
 
-void KSSPLAY_fade_start(KSSPLAY *kssplay, k_uint32 fade_time)
+void KSSPLAY_fade_start(KSSPLAY *kssplay, uint32_t fade_time)
 {
   if(fade_time)
   {
-    kssplay->fade = (k_uint32)1<<(FADE_BIT+FADE_BASE_BIT) ;
-    kssplay->fade_step = ((k_uint32)((double) kssplay->fade / ( kssplay->rate * fade_time / 1000 ))) >> (kssplay->nch-1) ; 
+    kssplay->fade = (uint32_t)1<<(FADE_BIT+FADE_BASE_BIT) ;
+    kssplay->fade_step = ((uint32_t)((double) kssplay->fade / ( kssplay->rate * fade_time / 1000 ))) >> (kssplay->nch-1) ; 
     if(kssplay->fade_step == 0) kssplay->fade_step = 1 ;
     kssplay->fade_flag = KSSPLAY_FADE_OUT ;
   }
@@ -363,14 +363,14 @@ void KSSPLAY_fade_stop(KSSPLAY *kssplay)
   kssplay->fade = 0 ;
 }
 
-static inline k_int32 fader(KSSPLAY *kssplay, k_int32 sample)
+static inline int32_t fader(KSSPLAY *kssplay, int32_t sample)
 {
   if(kssplay->fade_flag == KSSPLAY_FADE_OUT)
   {
     if(kssplay->fade > kssplay->fade_step)
     {
       kssplay->fade -= kssplay->fade_step ;
-      return ((k_int32)(sample*(kssplay->fade>>FADE_BASE_BIT)) >> FADE_BIT) ;
+      return ((int32_t)(sample*(kssplay->fade>>FADE_BASE_BIT)) >> FADE_BIT) ;
     }
     else
     {
@@ -384,9 +384,9 @@ static inline k_int32 fader(KSSPLAY *kssplay, k_int32 sample)
     return sample ;
 }
 
-static inline k_int16 compress(k_int32 wav)
+static inline int16_t compress(int32_t wav)
 {
-  const k_int32 vt = 32768*8/10 ;
+  const int32_t vt = 32768*8/10 ;
 
   if(wav<-vt)
   {
@@ -400,7 +400,7 @@ static inline k_int16 compress(k_int32 wav)
   if(wav<-32767) wav = -32767 ;
   else if(32767<wav) wav = 32767 ;
 
-  return (k_int16)wav ;
+  return (int16_t)wav ;
 }
 
 static inline int clip(int min, int val, int max)
@@ -410,11 +410,11 @@ static inline int clip(int min, int val, int max)
   else return val ;
 }
 
-static inline void calc_mono(KSSPLAY *kssplay, k_int16 *buf, k_uint32 length)
+static inline void calc_mono(KSSPLAY *kssplay, int16_t *buf, uint32_t length)
 {
-  k_uint32 i;
-  k_int32 d;
-  k_int32 volume[EDSC_MAX];
+  uint32_t i;
+  int32_t d;
+  int32_t volume[EDSC_MAX];
 
   for(i=0;i<EDSC_MAX;i++)
     volume[i] = clip(-256, kssplay->device_volume[i] + kssplay->master_volume, 255);
@@ -466,11 +466,11 @@ static inline void calc_mono(KSSPLAY *kssplay, k_int16 *buf, k_uint32 length)
 
 }
 
-static inline void calc_stereo(KSSPLAY *kssplay, k_int16 *buf, k_uint32 length)
+static inline void calc_stereo(KSSPLAY *kssplay, int16_t *buf, uint32_t length)
 {
-  k_uint32 i ;
-  k_int32 ch[2], b[2], c;
-  k_int32 volume[EDSC_MAX][2];
+  uint32_t i ;
+  int32_t ch[2], b[2], c;
+  int32_t volume[EDSC_MAX][2];
 
 #define neg(x) ((x<0)?x:0)
 
@@ -567,7 +567,7 @@ static inline void calc_stereo(KSSPLAY *kssplay, k_int16 *buf, k_uint32 length)
 
 }
 
-void KSSPLAY_calc(KSSPLAY *kssplay, k_int16 *buf, k_uint32 length)
+void KSSPLAY_calc(KSSPLAY *kssplay, int16_t *buf, uint32_t length)
 {
   if(kssplay->nch==1)
     calc_mono(kssplay,buf,length);
@@ -578,9 +578,9 @@ void KSSPLAY_calc(KSSPLAY *kssplay, k_int16 *buf, k_uint32 length)
   LPDETECT_update(kssplay->vm->lpde, kssplay->decoded_length * 1000 / kssplay->rate, 30*1000, 1000);
 }
 
-void KSSPLAY_calc_silent(KSSPLAY *kssplay, k_uint32 length)
+void KSSPLAY_calc_silent(KSSPLAY *kssplay, uint32_t length)
 {
-  k_uint32 i;
+  uint32_t i;
   for(i=0;i<length;i++)
   {
     kssplay->step_left += kssplay->step_rest ;
@@ -624,18 +624,18 @@ int KSSPLAY_get_stop_flag(KSSPLAY *kssplay)
   return kssplay->vm->IO[STOPIO];
 }
 
-int KSSPLAY_read_memory(KSSPLAY *kssplay, k_uint32 address)
+int KSSPLAY_read_memory(KSSPLAY *kssplay, uint32_t address)
 {
   return MMAP_read_memory(kssplay->vm->mmap, address) ;
 }
 
-void KSSPLAY_set_opll_patch(KSSPLAY *kssplay, k_uint8 *data)
+void KSSPLAY_set_opll_patch(KSSPLAY *kssplay, uint8_t *data)
 {
   if(kssplay->vm->opll)
     OPLL_setPatch(kssplay->vm->opll, data) ;
 }
 
-void KSSPLAY_set_channel_mask(KSSPLAY *kssplay, k_uint32 device, k_uint32 mask)
+void KSSPLAY_set_channel_mask(KSSPLAY *kssplay, uint32_t device, uint32_t mask)
 {
   switch(device)
   {
@@ -654,7 +654,7 @@ void KSSPLAY_set_channel_mask(KSSPLAY *kssplay, k_uint32 device, k_uint32 mask)
   }
 }
 
-void KSSPLAY_set_silent_limit(KSSPLAY *kssplay, k_uint32 time_in_ms)
+void KSSPLAY_set_silent_limit(KSSPLAY *kssplay, uint32_t time_in_ms)
 {
   kssplay->silent_limit = time_in_ms;
 }

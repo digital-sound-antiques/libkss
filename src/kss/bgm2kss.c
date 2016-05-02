@@ -3,13 +3,13 @@
 #include <string.h>
 #include "kss.h"
 
-static k_uint8 KINROU[8192] =
+static uint8_t KINROU[8192] =
 {
 #include "kinrou5.h"
 } ;
-static k_uint32 kinrou_size = sizeof(KINROU) ;
+static uint32_t kinrou_size = sizeof(KINROU) ;
 
-static k_uint8 kinrou_init[0x100] =
+static uint8_t kinrou_init[0x100] =
 {
 	0xCD,0x20,0x60,      /* CALL	6020H */
 	0x3E,0x3F,           /* LD	A,3FH */
@@ -32,7 +32,7 @@ static k_uint8 kinrou_init[0x100] =
   0xC9				         /* RET */
 } ;
 
-static k_uint8 kinrou_play[0x100] =
+static uint8_t kinrou_play[0x100] =
 {
   0xCD,0x29,0x60, /* CALL PLAY */
   0xCD,0x32,0x60, /* CALL PLAYCHK */
@@ -45,9 +45,9 @@ static k_uint8 kinrou_play[0x100] =
   0xC9            /* RET */
 } ;
 
-int KSS_isBGMdata(k_uint8 *data, k_uint32 size)
+int KSS_isBGMdata(uint8_t *data, uint32_t size)
 {
-  k_uint32 top, end;
+  uint32_t top, end;
 
   if(data[0]==0xfe&&size>=8)
   {
@@ -62,7 +62,7 @@ int KSS_isBGMdata(k_uint8 *data, k_uint32 size)
 
 }
 
-int KSS_set_kinrou(const k_uint8 *data, k_uint32 size)
+int KSS_set_kinrou(const uint8_t *data, uint32_t size)
 {
   if(size>8192) return 1 ;
   memcpy(KINROU,data,size) ;
@@ -92,10 +92,10 @@ int KSS_load_kinrou(const char *kinrou)
   return 0 ;
 }
 
-void KSS_get_info_bgmdata(KSS *kss, k_uint8 *data, k_uint32 size)
+void KSS_get_info_bgmdata(KSS *kss, uint8_t *data, uint32_t size)
 {
   static char extra[256] ;
-  k_uint32 offset, i ;
+  uint32_t offset, i ;
 
   if(size>0x60&&!strncmp((const char *)(data+0x50),"BTO",3))
   {
@@ -132,12 +132,12 @@ void KSS_get_info_bgmdata(KSS *kss, k_uint8 *data, k_uint32 size)
 
 }
 
-KSS *KSS_bgm2kss(k_uint8 *data, k_uint32 size)
+KSS *KSS_bgm2kss(uint8_t *data, uint32_t size)
 {
   KSS *kss ;
-  k_uint8 *buf ;
-  k_uint16 load_adr = 0x6000, load_size = 0x8000 + size - load_adr ;
-  k_uint16 init_adr = 0x7E00, play_adr = 0x7F00 ;
+  uint8_t *buf ;
+  uint16_t load_adr = 0x6000, load_size = 0x8000 + size - load_adr ;
+  uint16_t init_adr = 0x7E00, play_adr = 0x7F00 ;
 
   if((size<16)||(kinrou_size==0)) return NULL ;
 

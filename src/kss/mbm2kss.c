@@ -11,7 +11,7 @@
 
 #define KSS_HEADER_SIZE 0x20
 #define HEADER_SIZE 0x200
-static k_uint8 kss_header[KSS_HEADER_SIZE + HEADER_SIZE] = {
+static uint8_t kss_header[KSS_HEADER_SIZE + HEADER_SIZE] = {
   0x4B, 0x53, 0x53, 0x58, 0x00, 0x3E, 0x00, 0x00, 
   0x40, 0x3E, 0x9F, 0xFD, 0x00, 0x00, 0x10, 0x0D, 
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 
@@ -56,7 +56,7 @@ static k_uint8 kss_header[KSS_HEADER_SIZE + HEADER_SIZE] = {
 };
 
 static unsigned char *drv_top=0;
-static k_uint8 drv_code[0x8000] = 
+static uint8_t drv_code[0x8000] = 
 {
 #include "mbr143.h"
 };
@@ -64,7 +64,7 @@ static int drv_size=sizeof(drv_code);
 static int mbplay=0;
 static int mbkload=0;
 static int mbmload=0;
-static k_uint8 mbkdata[0x8038];
+static uint8_t mbkdata[0x8038];
 static int mbksize = 0;
 static int cnv_mode=2;
 static int vsync_ntsc=1;
@@ -81,28 +81,28 @@ static char *memfind(char *buff, int bsize, char *str, int len)
   return NULL;
 }
 
-static int read_address(k_uint8 *buff)
+static int read_address(uint8_t *buff)
 {
   return buff[0] + (buff[1]<<8);
 }
 
 static int mbmdrv_init()
 {
-  k_uint8 *tmp;
+  uint8_t *tmp;
 
   drv_top = (unsigned char *)memfind((char *)drv_code, drv_size, "AB\0", 4);
   if(!drv_top) return 1;
   drv_size -= (drv_top - drv_code);
 
-  tmp = (k_uint8 *)memfind((char *)drv_top, drv_size, "MBPLAY", 7);
+  tmp = (uint8_t *)memfind((char *)drv_top, drv_size, "MBPLAY", 7);
   if (!tmp) return 1;
   mbplay = read_address(tmp + 7);
 
-  tmp = (k_uint8 *)memfind((char *)drv_top, drv_size, "MBMLOAD", 8);
+  tmp = (uint8_t *)memfind((char *)drv_top, drv_size, "MBMLOAD", 8);
   if (!tmp) return 1;
   mbmload = read_address(tmp + 8);
 
-  tmp = (k_uint8 *)memfind((char *)drv_top, drv_size, "MBKLOAD", 8);
+  tmp = (uint8_t *)memfind((char *)drv_top, drv_size, "MBKLOAD", 8);
   if (!tmp) return 1;
   mbkload = read_address(tmp + 8);
 
@@ -149,7 +149,7 @@ int KSS_load_mbmdrv(const char *filename)
   return mbmdrv_init();
 }
 
-int KSS_set_mbmdrv(const k_uint8 *mbmdrv, k_uint32 size)
+int KSS_set_mbmdrv(const uint8_t *mbmdrv, uint32_t size)
 {
 
   if(mbmdrv&&0x100<drv_size&&drv_size<0x8000)
@@ -252,7 +252,7 @@ int KSS_load_mbk(const char *mbkpath)
   return 0;
 }
 
-int KSS_set_mbk(const k_uint8 *mbkp)
+int KSS_set_mbk(const uint8_t *mbkp)
 {
   if(mbkp)
   {
@@ -267,7 +267,7 @@ int KSS_set_mbk(const k_uint8 *mbkp)
   return 0;
 }
 
-static KSS *mbm2kss(const k_uint8 *mbmdata, size_t mbmsize, int devtype, int isntsc)
+static KSS *mbm2kss(const uint8_t *mbmdata, size_t mbmsize, int devtype, int isntsc)
 {
   char *kssbuf;
   KSS *kss = 0;
@@ -319,19 +319,19 @@ static KSS *mbm2kss(const k_uint8 *mbmdata, size_t mbmsize, int devtype, int isn
     tmp += mbksize;
     memcpy(kssbuf+tmp,mbmdata,mbmsize);
     tmp += mbmsize;
-    kss = KSS_new((k_uint8 *)kssbuf, tmp);
+    kss = KSS_new((uint8_t *)kssbuf, tmp);
     free(kssbuf);
   }
 
   return kss;
 }
 
-int KSS_isMBMdata(k_uint8 *data, k_uint32 size)
+int KSS_isMBMdata(uint8_t *data, uint32_t size)
 {
   return 0; // undecidable.
 }
 
-KSS *KSS_mbm2kss(const k_uint8 *data, k_uint32 size)
+KSS *KSS_mbm2kss(const uint8_t *data, uint32_t size)
 {
   if(drv_top) 
   {
@@ -349,9 +349,9 @@ void KSS_set_mbmparam(int mode, int stereo, int ntsc)
   vsync_ntsc = ntsc;
 }
 
-void KSS_get_info_mbmdata(KSS *kss, k_uint8 *data, k_uint32 size)
+void KSS_get_info_mbmdata(KSS *kss, uint8_t *data, uint32_t size)
 {
-  k_uint32 i = 0 , offset = 0 ;
+  uint32_t i = 0 , offset = 0 ;
 
   if(size < 0x200) return ;
 

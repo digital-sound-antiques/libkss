@@ -3,16 +3,16 @@
 #include <string.h>
 #include "kss.h"
 
-static k_uint8 OPXDRV[16384] =
+static uint8_t OPXDRV[16384] =
 {
 #include "opx4kss.h"
 } ;
-static k_uint32 opxdrv_size = sizeof(OPXDRV) ;
+static uint32_t opxdrv_size = sizeof(OPXDRV) ;
 
-static k_uint8 FMBIOS[16384];
-static k_uint32 fmbios_size = 0;
+static uint8_t FMBIOS[16384];
+static uint32_t fmbios_size = 0;
 
-static k_uint8 FMTONE[512] = 
+static uint8_t FMTONE[512] = 
 {
 0x3A,0x40,0x82,0x3D,0x21,0x01,0x00,0x19,0x77,0x32,0x40,0x82,0xC1,0x0C,0x0C,0x21,
 0x02,0x00,0x19,0x71,0x21,0x12,0x00,0x39,0x7E,0x3C,0x3C,0x21,0x12,0x00,0x39,0x77,
@@ -48,13 +48,13 @@ static k_uint8 FMTONE[512] =
 0xC1,0xC1,0xC1,0xC1,0x21,0x04,0x00,0x09,0x7E,0x23,0x66,0x6F,0xC5,0xCD,0xD5,0x72,
 };
 
-int KSS_isOPXdata(k_uint8 *data, k_uint32 size)
+int KSS_isOPXdata(uint8_t *data, uint32_t size)
 {
   if((128+32<size)&&/*data[0x7B]==0x0D&&data[0x7C]==0x0A&&*/data[0x7D]==0x1A) return 1 ;
   else return 0 ;
 }
 
-int KSS_set_fmbios(const k_uint8 *data, k_uint32 size)
+int KSS_set_fmbios(const uint8_t *data, uint32_t size)
 {
   if(size>16384) return 1 ;
   memcpy(FMBIOS, data, size) ;
@@ -75,7 +75,7 @@ int KSS_load_fmbios(const char *filename)
   return 0 ;
 }
 
-int KSS_set_opxdrv(const k_uint8 *data, k_uint32 size)
+int KSS_set_opxdrv(const uint8_t *data, uint32_t size)
 {
   if(size>16384) return 1 ;
   memcpy(OPXDRV,data,size) ;
@@ -105,7 +105,7 @@ int KSS_load_opxdrv(const char *opxdrv)
   return 0 ;
 }
 
-void KSS_get_info_opxdata(KSS *kss, k_uint8 *data, k_uint32 size)
+void KSS_get_info_opxdata(KSS *kss, uint8_t *data, uint32_t size)
 {
   int i ;
 
@@ -138,14 +138,14 @@ void KSS_get_info_opxdata(KSS *kss, k_uint8 *data, k_uint32 size)
 
 #define OFFSET(b,l,x) (b + KSS_HEADER_SIZE + x - l)
 
-KSS *KSS_opx2kss(k_uint8 *data, k_uint32 size)
+KSS *KSS_opx2kss(uint8_t *data, uint32_t size)
 {
   KSS *kss ;
   int i ;
 
-  k_uint8 *buf ;
-  k_uint16 load_adr = 0x0100, load_size = 0x8000 + size - load_adr ;
-  k_uint16 init_adr = 0x0106, play_adr = 0x0103 ;
+  uint8_t *buf ;
+  uint16_t load_adr = 0x0100, load_size = 0x8000 + size - load_adr ;
+  uint16_t init_adr = 0x0106, play_adr = 0x0103 ;
 
   if(size<16||opxdrv_size==0) return NULL ;
 

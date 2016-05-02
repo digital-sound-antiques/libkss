@@ -20,14 +20,14 @@
 #endif
 
 /* for write only and read only memory */
-static k_uint8 dummy_read_map[0x2000], dummy_write_map[0x2000] ;
+static uint8_t dummy_read_map[0x2000], dummy_write_map[0x2000] ;
 
 #define FAILED(x) ((x)==NULL)
 
-static BANK *BANK_new(k_uint32 type, k_uint8 *data)
+static BANK *BANK_new(uint32_t type, uint8_t *data)
 {
   BANK *bank ;
-  k_uint32 size ;
+  uint32_t size ;
 
   if(type==BANK_16K) size = 0x4000 ;
   else if(type==BANK_8K) size = 0x2000 ;
@@ -58,12 +58,12 @@ static void BANK_delete(BANK *bank)
 }
 
 
-void MMAP_set_page_attr(MMAP *mmap, k_uint32 page, k_uint32 attr)
+void MMAP_set_page_attr(MMAP *mmap, uint32_t page, uint32_t attr)
 {
   MMAP_set_bank_attr(mmap, mmap->current_slot[page], mmap->current_bank[page], attr) ;
 }
 
-void MMAP_set_bank_attr(MMAP *mmap, k_uint32 slot, k_uint32 bank, k_uint32 attr)
+void MMAP_set_bank_attr(MMAP *mmap, uint32_t slot, uint32_t bank, uint32_t attr)
 {
   int i ;
   assert(slot<0x10) ;
@@ -78,7 +78,7 @@ void MMAP_set_bank_attr(MMAP *mmap, k_uint32 slot, k_uint32 bank, k_uint32 attr)
   }
 }
 
-void MMAP_set_bank_data(MMAP *mmap, k_uint32 slot, k_uint32 bank, k_uint32 type, k_uint8 *data)
+void MMAP_set_bank_data(MMAP *mmap, uint32_t slot, uint32_t bank, uint32_t type, uint8_t *data)
 {
   assert(slot<0x10) ;
   assert(bank<0x100) ;
@@ -97,7 +97,7 @@ void MMAP_set_bank_data(MMAP *mmap, k_uint32 slot, k_uint32 bank, k_uint32 type,
 }
 
 
-void MMAP_unset_bank(MMAP *mmap, k_uint32 slot, k_uint32 bank)
+void MMAP_unset_bank(MMAP *mmap, uint32_t slot, uint32_t bank)
 {
   assert(slot<0x10) ;
   assert(bank<0x100) ;
@@ -116,7 +116,7 @@ void MMAP_unset_bank(MMAP *mmap, k_uint32 slot, k_uint32 bank)
 }
 
 
-void MMAP_mirror_bank(MMAP *mmap, k_uint32 src_slot, k_uint32 src_bank, k_uint32 dst_slot, k_uint32 dst_bank)
+void MMAP_mirror_bank(MMAP *mmap, uint32_t src_slot, uint32_t src_bank, uint32_t dst_slot, uint32_t dst_bank)
 {
   assert(src_slot<0x10) ;
   assert(src_bank<0x100) ;
@@ -134,7 +134,7 @@ void MMAP_mirror_bank(MMAP *mmap, k_uint32 src_slot, k_uint32 src_bank, k_uint32
   }
 }
 
-void MMAP_select_bank(MMAP *mmap, k_uint32 page, k_uint32 slot, k_uint32 bank)
+void MMAP_select_bank(MMAP *mmap, uint32_t page, uint32_t slot, uint32_t bank)
 {
   assert(slot<0x10) ;
   assert(bank<0x100) ;
@@ -196,16 +196,16 @@ void MMAP_select_bank(MMAP *mmap, k_uint32 page, k_uint32 slot, k_uint32 bank)
   
 }
 
-k_uint32 MMAP_read_memory(MMAP *mmap, k_uint32 adr)
+uint32_t MMAP_read_memory(MMAP *mmap, uint32_t adr)
 {
   assert(adr<0x10000) ;
   return mmap->readmap[adr>>13][adr&0x1fff] ;
 }
 
-void MMAP_write_memory(MMAP *mmap, k_uint32 adr, k_uint32 val)
+void MMAP_write_memory(MMAP *mmap, uint32_t adr, uint32_t val)
 {
   assert(adr<0x10000) ;
-  mmap->writemap[adr>>13][adr&0x1fff] = (k_uint8)(val&0xff) ;
+  mmap->writemap[adr>>13][adr&0x1fff] = (uint8_t)(val&0xff) ;
 }
 
 MMAP *MMAP_new()

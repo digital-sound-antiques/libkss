@@ -1,6 +1,5 @@
 #ifndef _DC_FILTER_H_
 #define _DC_FILTER_H_
-#include "../ksstypes.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -8,13 +7,13 @@ extern "C" {
 
 typedef struct _tagDCF
 {
-  k_uint32 enable;
+  uint32_t enable;
   double weight;
   double in, out;
 } DCF;
 
 DCF *DCF_new(void);
-k_int32 DCF_calc(DCF *, k_int32 data);
+int32_t DCF_calc(DCF *, int32_t data);
 void DCF_delete(DCF *);
 void DCF_reset(DCF *, double rate);
 void DCF_disable(DCF *);
