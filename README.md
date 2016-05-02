@@ -10,7 +10,9 @@ The following step builds `libkss.a` library.
 ```
 $ git clone --recursive https://github.com/digital-sound-antiques/libkss.git
 $ cd libkss
-$ cmake .
+$ mkdir build
+$ cd build
+$ cmake ..
 $ make
 ```
 
