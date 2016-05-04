@@ -28,6 +28,8 @@ KSS *KSS_new(uint8_t *data, uint32_t size) {
   return kss;
 }
 
+const char *KSS_get_title(KSS *kss) { return (char *)kss->title; }
+
 void KSS_delete(KSS *kss) {
   if (kss) {
     free(kss->data);
