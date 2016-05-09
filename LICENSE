@@ -1,4 +1,8 @@
-libkss License
+## Caveat
+The `kss-drivers` submodule on which libkss depends is NOT follow this license.
+See README of the submodule.
+
+## libkss License 
 
 Copyright (c) 2015 Mitsutaka Okazaki
 
