@@ -23,5 +23,5 @@ $ make kss2wav
 ```
 
 # NOTE
-The `kss-drivers` submodule on which libkss depends, is NOT follow the libkss's license.
+The `kss-drivers` submodule on which libkss depends, does NOT follow the libkss's license.
 See README of the submodule.
