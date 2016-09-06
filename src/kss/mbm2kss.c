@@ -33,8 +33,8 @@ static uint8_t kss_header[KSS_HEADER_SIZE + HEADER_SIZE] = {
 };
 
 static unsigned char *drv_top = 0;
-static uint8_t drv_code[0x8000] = {
-#include "mbr143.h"
+static uint8_t drv_code[] = {
+#include "drivers/mbr143.h"
 };
 static int drv_size = sizeof(drv_code);
 static int mbplay = 0;
@@ -273,6 +273,7 @@ static KSS *mbm2kss(const uint8_t *mbmdata, size_t mbmsize, int devtype, int isn
   memcpy(&kss_header[KSS_HEADER_SIZE + 0x10], mbmdata + 0xCF, 0x28);
 
   kssbuf = malloc(KSS_HEADER_SIZE + HEADER_SIZE + drv_size + mbksize + mbmsize);
+
   if (kssbuf != NULL) {
     tmp = 0;
     memcpy(kssbuf + tmp, kss_header, KSS_HEADER_SIZE + HEADER_SIZE);
@@ -295,11 +296,17 @@ int KSS_isMBMdata(uint8_t *data, uint32_t size) {
 }
 
 KSS *KSS_mbm2kss(const uint8_t *data, uint32_t size) {
+
+  if (0<drv_size && !drv_top) {
+    mbmdrv_init();
+  }
+
   if (drv_top) {
     load_mbk();
     return mbm2kss(data, size, cnv_mode, vsync_ntsc);
-  } else
+  } else {
     return NULL;
+  }
 }
 
 void KSS_set_mbmparam(int mode, int stereo, int ntsc) {

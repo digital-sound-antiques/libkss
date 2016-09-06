@@ -4,12 +4,12 @@
 #include "kss.h"
 
 static uint8_t MPKDRV106[8192] = {
-#include "mpk106.h"
+#include "drivers/mpk106.h"
 };
 static uint32_t mpkdrv106_size = sizeof(MPKDRV106);
 
 static uint8_t MPKDRV103[8192] = {
-#include "mpk103.h"
+#include "drivers/mpk103.h"
 };
 static uint32_t mpkdrv103_size = sizeof(MPKDRV103);
 

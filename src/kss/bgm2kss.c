@@ -4,7 +4,7 @@
 #include "kss.h"
 
 static uint8_t KINROU[8192] = {
-#include "kinrou5.h"
+#include "drivers/kinrou5.h"
 };
 static uint32_t kinrou_size = sizeof(KINROU);
 

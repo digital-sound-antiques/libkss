@@ -4,7 +4,7 @@
 #include "kss.h"
 
 static uint8_t OPXDRV[16384] = {
-#include "opx4kss.h"
+#include "drivers/opx4kss.h"
 };
 static uint32_t opxdrv_size = sizeof(OPXDRV);
 

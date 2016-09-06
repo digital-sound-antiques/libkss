@@ -5,7 +5,7 @@
 #include "kss.h"
 
 static uint8_t MGSDRV[0x2000] = {
-#include "mgsdrv.h"
+#include "drivers/mgsdrv.h"
 };
 static uint32_t mgsdrv_size = sizeof(MGSDRV);
 

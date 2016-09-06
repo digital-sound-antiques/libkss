@@ -26,17 +26,9 @@ if(NOT TARGET kmz80)
 	add_subdirectory(modules/kmz80)
 endif()
 
-include_directories(
-	modules/drivers 
-	modules/kmz80 
-	modules/emu2149 
-	modules/emu2212 
-	modules/emu2413 
-	modules/emu8950 
-	modules/emu76489
-)
-
 file(GLOB SOURCES src/*.c src/**/*.c)
+
+include_directories(modules)
 
 add_library(kss STATIC ${SOURCES})
 target_link_libraries(kss emu2149 emu2212 emu2413 emu8950 emu76489 kmz80)
