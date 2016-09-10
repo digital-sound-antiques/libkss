@@ -153,6 +153,14 @@ int KSS_autoload_mbk(const char *mbmfile, const char *extra_path, const char *du
   char *p;
   int i;
 
+#ifdef _WIN32
+    const char PATH_SEPARATOR = '\\';
+    const char *PATH_SEPARATOR_STR = "\\";
+#else
+    const char PATH_SEPARATOR = '/';
+    const char *PATH_SEPARATOR_STR = "/";
+#endif
+
   fp = fopen(mbmfile, "rb");
   if (!fp)
     return 1;
@@ -174,20 +182,20 @@ int KSS_autoload_mbk(const char *mbmfile, const char *extra_path, const char *du
 
   strncpy(mbkpath[1], mbmfile, 499);
   mbkpath[1][499] = '\0';
-  p = strrchr(mbkpath[1], '\\');
+  p = strrchr(mbkpath[1], PATH_SEPARATOR);
   if (p)
     *(p + 1) = '\0';
   strcat(mbkpath[1], mbkname);
 
   strncpy(mbkpath[2], extra_path, 499);
   mbkpath[2][499] = '\0';
-  if (mbkpath[2][strlen(mbkpath[2]) - 1] != '\\')
-    strcat(mbkpath[2], "\\");
+  if (mbkpath[2][strlen(mbkpath[2]) - 1] != PATH_SEPARATOR)
+    strcat(mbkpath[2], PATH_SEPARATOR_STR);
   strcat(mbkpath[2], mbkname);
 
   if (dummy_file && dummy_file[0]) {
     strncpy(mbkpath[3], mbmfile, 499);
-    p = strrchr(mbkpath[3], '\\');
+    p = strrchr(mbkpath[3], PATH_SEPARATOR);
     if (p)
       *(p + 1) = '\0';
     strcat(mbkpath[3], dummy_file);
