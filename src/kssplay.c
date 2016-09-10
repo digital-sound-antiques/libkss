@@ -364,6 +364,90 @@ static inline int clip(int min, int val, int max) {
     return val;
 }
 
+static inline void apply_fade(int16_t *buf, int32_t len, int32_t fade) {
+  int i;
+  for(i=0;i<len;i++) {
+    buf[i] = (int16_t)((int32_t)(buf[i] * (fade >> FADE_BASE_BIT)) >> FADE_BIT);
+  }
+}
+
+static inline void fade_per_ch(KSSPLAY *kssplay, KSSPLAY_PER_CH_OUT *out) {
+  if (kssplay->fade_flag == KSSPLAY_FADE_OUT) {
+    if (kssplay->fade > kssplay->fade_step) {
+      kssplay->fade -= kssplay->fade_step;
+      apply_fade(out->psg,3,kssplay->fade);
+      apply_fade(out->scc,5,kssplay->fade);
+      apply_fade(out->opll,15,kssplay->fade);
+      apply_fade(out->opl,15,kssplay->fade);
+      apply_fade(out->sng,4,kssplay->fade);
+      apply_fade(out->dac,2,kssplay->fade);
+    } else {
+      kssplay->fade = 0;
+      kssplay->fade_flag = KSSPLAY_FADE_END;
+      memset(out,0,sizeof(*out));
+    }
+  } else if (kssplay->fade_flag == KSSPLAY_FADE_END) {
+      memset(out,0,sizeof(*out));
+  }
+}
+
+static inline void calc_per_ch(KSSPLAY *kssplay, KSSPLAY_PER_CH_OUT *out) {
+
+  kssplay->step_left += kssplay->step_rest;
+  if (kssplay->step_left >= kssplay->rate) {
+    kssplay->step_left -= kssplay->rate;
+    VM_exec(kssplay->vm, kssplay->step + 1);
+  } else {
+    VM_exec(kssplay->vm, kssplay->step);
+  }
+
+  memset(out, 0, sizeof(*out));
+
+  if(kssplay->kss->msx_audio && !kssplay->device_mute[EDSC_OPL]) 
+  {
+    OPL_calc(kssplay->vm->opl);
+    memcpy(out->opl, kssplay->vm->opl->ch_out, sizeof(out->opl));
+  } 
+
+  if(kssplay->kss->fmpac && !kssplay->device_mute[EDSC_OPLL]) 
+  {
+    OPLL_calc(kssplay->vm->opll);
+    memcpy(out->opll, kssplay->vm->opll->ch_out, sizeof(out->opll));
+  }
+
+  if(!kssplay->device_mute[EDSC_PSG]) 
+  {
+    if(kssplay->kss->sn76489)
+    {
+      SNG_calc(kssplay->vm->sng);
+      memcpy(out->sng, kssplay->vm->sng->ch_out, sizeof(out->sng));
+    }
+    else
+    {
+      PSG_calc(kssplay->vm->psg);
+      memcpy(out->psg, kssplay->vm->psg->ch_out, sizeof(out->psg));
+    }
+  }
+
+  if (!kssplay->device_mute[EDSC_SCC])
+  {
+    SCC_calc(kssplay->vm->scc);
+    memcpy(out->scc, kssplay->vm->scc->ch_out, sizeof(out->scc));
+  }
+
+  out->dac[0] = kssplay->vm->DA1;
+  out->dac[1] = kssplay->vm->DA8;
+
+  fade_per_ch(kssplay, out);
+}
+
+void KSSPLAY_calc_per_ch(KSSPLAY *kssplay, KSSPLAY_PER_CH_OUT *out, uint32_t length) {
+  uint32_t i;
+  for(i=0;i<length;i++) {
+    calc_per_ch(kssplay, out+i);
+  }
+}
+
 static inline void calc_mono(KSSPLAY *kssplay, int16_t *buf, uint32_t length) {
   uint32_t i;
   int32_t d;
