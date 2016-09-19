@@ -21,7 +21,8 @@ extern "C" {
 #define KSSPLAY_MUTE (1 << KSSPLAY_VOL_BITS)
 #define KSSPLAY_VOL_MASK ((1 << KSSPLAY_VOL_BITS) - 1)
 
-typedef struct tagKSSPLAY {
+typedef struct tagKSSPLAY KSSPLAY;
+struct tagKSSPLAY {
   KSS *kss;
 
   uint8_t *main_data;
@@ -59,8 +60,7 @@ typedef struct tagKSSPLAY {
 
   int scc_disable;
   int opll_stereo;
-
-} KSSPLAY;
+};
 
 /**
  * psg[0-2]: SQUARE CH 1-3
@@ -81,19 +81,19 @@ typedef struct tagKSSPLAY {
  * opl[11] : Snare (Not supported yet)
  * opl[12] : Tom (Not supported yet)
  * opl[13] : Cymbal (Not supported yet)
- * opl[14] : ADPCM 
+ * opl[14] : ADPCM
  *
  * sng[0-2] :SQUARE CH 1-3
  * sng[3]   :NOISE
  *
  * dac[0]: 1-bit DAC
- * dac[1]: SCC 8-bit DAC 
+ * dac[1]: SCC 8-bit DAC
  */
 typedef struct tagKSSPLAY_PER_CH_OUT {
   int16_t psg[3];
   int16_t scc[5];
-  int16_t opll[15]; 
-  int16_t opl[15];  
+  int16_t opll[15];
+  int16_t opl[15];
   int16_t sng[4];
   int16_t dac[2];
 } KSSPLAY_PER_CH_OUT;
@@ -152,6 +152,8 @@ void KSSPLAY_set_channel_mask(KSSPLAY *kssplay, uint32_t device, uint32_t mask);
 void KSSPLAY_set_device_type(KSSPLAY *kssplay, uint32_t devnum, uint32_t type);
 void KSSPLAY_set_silent_limit(KSSPLAY *kssplay, uint32_t time_in_ms);
 
+void KSSPLAY_set_iowrite_handler(KSSPLAY *kssplay, void (*handler)(KSSPLAY *kssplay, uint32_t a, uint32_t d));
+void KSSPLAY_set_memwrite_handler(KSSPLAY *kssplay, void (*handler)(KSSPLAY *kssplay, uint32_t a, uint32_t d));
 
 uint32_t KSSPLAY_get_device_volume(KSSPLAY *kssplay, uint32_t devnum);
 void KSSPLAY_get_MGStext(KSSPLAY *kssplay, char *buf, int max);

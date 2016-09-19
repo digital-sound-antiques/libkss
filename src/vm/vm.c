@@ -18,6 +18,10 @@ static uint32_t memread(VM *vm, uint32_t a) { return MMAP_read_memory(vm->mmap, 
 static void memwrite(VM *vm, uint32_t a, uint32_t d) {
   uint32_t page = a >> 13;
 
+  if (vm->memwrite_handler) {
+    vm->memwrite_handler(vm->memwrite_handler_context, a, d);
+  }
+
   if (!vm->scc_disable) {
     if (vm->scc_type == VM_SCC_AUTO && (a == 0x9000 || a == 0xB000 || a == 0xBFFE)) {
       if (a == 0x9000 && d != 0x00)
@@ -41,6 +45,7 @@ static void memwrite(VM *vm, uint32_t a, uint32_t d) {
   }
 
   MMAP_write_memory(vm->mmap, a, d);
+
 }
 
 static uint32_t ioread(VM *vm, uint32_t a) {
@@ -59,8 +64,13 @@ static uint32_t ioread(VM *vm, uint32_t a) {
 static void iowrite(VM *vm, uint32_t a, uint32_t d) {
   a &= 0xff;
 
-  if (((a == STOPIO) || (a == LOOPIO) || (a == ADRLIO) || (a == ADRHIO)) && (vm->IO[EXTIO] != 0x7f))
+  if (vm->iowrite_handler) {
+    vm->iowrite_handler(vm->iowrite_handler_context, a, d);
+  }
+
+  if (((a == STOPIO) || (a == LOOPIO) || (a == ADRLIO) || (a == ADRHIO)) && (vm->IO[EXTIO] != 0x7f)) {
     return;
+  }
 
   vm->IO[a] = (uint8_t)(d & 0xff);
 
