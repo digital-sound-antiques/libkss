@@ -688,11 +688,11 @@ void KSSPLAY_set_channel_mask(KSSPLAY *kssplay, uint32_t device, uint32_t mask) 
 
 void KSSPLAY_set_silent_limit(KSSPLAY *kssplay, uint32_t time_in_ms) { kssplay->silent_limit = time_in_ms; }
 
-void KSSPLAY_set_iowrite_handler(KSSPLAY *kssplay, void (*handler)(KSSPLAY *kssplay, uint32_t a, uint32_t d)) {
-  kssplay->vm->iowrite_handler_context = kssplay;
+void KSSPLAY_set_iowrite_handler(KSSPLAY *kssplay, void *context, void (*handler)(void *context, uint32_t a, uint32_t d)) {
+  kssplay->vm->iowrite_handler_context = context ? context : kssplay;
   kssplay->vm->iowrite_handler = (void (*)(void *, uint32_t, uint32_t))handler;
 }
-void KSSPLAY_set_memwrite_handler(KSSPLAY *kssplay, void (*handler)(KSSPLAY *kssplay, uint32_t a, uint32_t d)) {
-  kssplay->vm->memwrite_handler_context = kssplay;
+void KSSPLAY_set_memwrite_handler(KSSPLAY *kssplay, void *context, void (*handler)(void *context, uint32_t a, uint32_t d)) {
+  kssplay->vm->memwrite_handler_context = context ? context : kssplay;
   kssplay->vm->memwrite_handler = (void (*)(void *, uint32_t, uint32_t))handler;
 }

@@ -152,8 +152,8 @@ void KSSPLAY_set_channel_mask(KSSPLAY *kssplay, uint32_t device, uint32_t mask);
 void KSSPLAY_set_device_type(KSSPLAY *kssplay, uint32_t devnum, uint32_t type);
 void KSSPLAY_set_silent_limit(KSSPLAY *kssplay, uint32_t time_in_ms);
 
-void KSSPLAY_set_iowrite_handler(KSSPLAY *kssplay, void (*handler)(KSSPLAY *kssplay, uint32_t a, uint32_t d));
-void KSSPLAY_set_memwrite_handler(KSSPLAY *kssplay, void (*handler)(KSSPLAY *kssplay, uint32_t a, uint32_t d));
+void KSSPLAY_set_iowrite_handler(KSSPLAY *kssplay, void *context, void (*handler)(void *context, uint32_t a, uint32_t d));
+void KSSPLAY_set_memwrite_handler(KSSPLAY *kssplay, void *context, void (*handler)(void *context, uint32_t a, uint32_t d));
 
 uint32_t KSSPLAY_get_device_volume(KSSPLAY *kssplay, uint32_t devnum);
 void KSSPLAY_get_MGStext(KSSPLAY *kssplay, char *buf, int max);
