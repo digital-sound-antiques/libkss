@@ -1,6 +1,10 @@
 cmake_minimum_required(VERSION 3.4)
 
-set(CMAKE_C_FLAGS "-O3 -Wall")
+if(MSVC)
+  set(CMAKE_C_FLAGS "/Ox /W3 /wd4996")
+else()
+  set(CMAKE_C_FLAGS "-O3 -Wall")
+endif()
 
 if(NOT TARGET emu2149) 
 	add_subdirectory(modules/emu2149) 
