@@ -243,10 +243,12 @@ int main(int argc, char *argv[]) {
   KSSPLAY_set_device_quality(kssplay, EDSC_SCC, opt.quality);
   KSSPLAY_set_device_quality(kssplay, EDSC_OPLL, opt.quality);
 
+  int16_t *wavebuf = malloc(opt.rate * opt.nch * sizeof(int16_t));
+  KSSPLAY_PER_CH_OUT *ch_out = malloc(opt.rate * sizeof(KSSPLAY_PER_CH_OUT));
+
   /* Create WAV Data */
   for (t = 0; t < opt.play_time; t++) {
     int pos;
-    int16_t wavebuf[opt.rate * opt.nch];
 
     printf("%03d/%03d", t + 1, opt.play_time);
     fflush(stdout);
@@ -261,7 +263,6 @@ int main(int argc, char *argv[]) {
     } else {
       /* Example of KSSPLAY_calc_per_ch. */
       /* Note that all volume controls and filters are ignored. */
-      KSSPLAY_PER_CH_OUT ch_out[opt.rate];
 
       KSSPLAY_calc_per_ch(kssplay, ch_out, opt.rate);
       for (i = 0; i < opt.rate; i++) {
@@ -273,7 +274,7 @@ int main(int argc, char *argv[]) {
     }
 
     /* Write 1 sec wave block to file */
-    fwrite(wavebuf, 2, opt.rate * opt.nch, fp);
+    fwrite(wavebuf, sizeof(int16_t), opt.rate * opt.nch, fp);
     pos = ftell(fp);
 
     /* Update WAVE header */
@@ -299,6 +300,10 @@ int main(int argc, char *argv[]) {
   }
 
   fclose(fp);
+
+  free(wavebuf);
+  free(ch_out);
+
   KSSPLAY_delete(kssplay);
   KSS_delete(kss);
 
