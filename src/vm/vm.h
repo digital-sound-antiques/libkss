@@ -64,6 +64,11 @@ struct tagVM {
   SNG *sng;
 
   void *fp;
+
+  void *iowrite_handler_context;
+  void (*iowrite_handler)(void *context, uint32_t a, uint32_t d);
+  void *memwrite_handler_context;
+  void (*memwrite_handler)(void *context, uint32_t a, uint32_t d);
 };
 
 #define MSX_CLK (3579545)

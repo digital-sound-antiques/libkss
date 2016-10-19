@@ -21,7 +21,8 @@ extern "C" {
 #define KSSPLAY_MUTE (1 << KSSPLAY_VOL_BITS)
 #define KSSPLAY_VOL_MASK ((1 << KSSPLAY_VOL_BITS) - 1)
 
-typedef struct tagKSSPLAY {
+typedef struct tagKSSPLAY KSSPLAY;
+struct tagKSSPLAY {
   KSS *kss;
 
   uint8_t *main_data;
@@ -59,8 +60,43 @@ typedef struct tagKSSPLAY {
 
   int scc_disable;
   int opll_stereo;
+};
 
-} KSSPLAY;
+/**
+ * psg[0-2]: SQUARE CH 1-3
+ *
+ * scc[0-4]: WAVE CH 1-5
+ *
+ * opll[0-8]: FM CH 1-9
+ * opll[9]  : Bass Drum
+ * opll[10] : Hi-Hat
+ * opll[11] : Snare
+ * opll[12] : Tom
+ * opll[13] : Cymbal
+ * opll[14] : DAC (Not supported yet)
+ *
+ * opl[0-8]: FM CH 1-9
+ * opl[9]  : Bass Drum (Not supported yet)
+ * opl[10] : Hi-Hat (Not supported yet)
+ * opl[11] : Snare (Not supported yet)
+ * opl[12] : Tom (Not supported yet)
+ * opl[13] : Cymbal (Not supported yet)
+ * opl[14] : ADPCM
+ *
+ * sng[0-2] :SQUARE CH 1-3
+ * sng[3]   :NOISE
+ *
+ * dac[0]: 1-bit DAC
+ * dac[1]: SCC 8-bit DAC
+ */
+typedef struct tagKSSPLAY_PER_CH_OUT {
+  int16_t psg[3];
+  int16_t scc[5];
+  int16_t opll[15];
+  int16_t opl[15];
+  int16_t sng[4];
+  int16_t dac[2];
+} KSSPLAY_PER_CH_OUT;
 
 enum { KSSPLAY_FADE_NONE = 0, KSSPLAY_FADE_OUT = 1, KSSPLAY_FADE_END = 2 };
 
@@ -75,11 +111,17 @@ int KSSPLAY_set_data(KSSPLAY *, KSS *kss);
 /* scc_type = 0:auto 1: standard 2:enhanced */
 void KSSPLAY_reset(KSSPLAY *, uint32_t song, uint32_t cpu_speed);
 
-/* Emulate some seconds and Generate Wave data */
+/* Calcurate wave samples as int16 array */
 void KSSPLAY_calc(KSSPLAY *, int16_t *buf, uint32_t length);
 
-/* Emulate some seconds */
+/* Calcurate samples internally. No output is generated. */
 void KSSPLAY_calc_silent(KSSPLAY *, uint32_t length);
+
+/**
+ * Calcurate wave samples as a sequence of KSSPLAY_PER_CH_OUT struct.
+ * This function generates raw wave samples. All volume and filter settings are ignored.
+ */
+void KSSPLAY_calc_per_ch(KSSPLAY *kssplay, KSSPLAY_PER_CH_OUT *per_ch_out, uint32_t length);
 
 /* Delete KSSPLAY object */
 void KSSPLAY_delete(KSSPLAY *);
@@ -109,6 +151,9 @@ void KSSPLAY_set_device_mute(KSSPLAY *kssplay, uint32_t devnum, uint32_t mute);
 void KSSPLAY_set_channel_mask(KSSPLAY *kssplay, uint32_t device, uint32_t mask);
 void KSSPLAY_set_device_type(KSSPLAY *kssplay, uint32_t devnum, uint32_t type);
 void KSSPLAY_set_silent_limit(KSSPLAY *kssplay, uint32_t time_in_ms);
+
+void KSSPLAY_set_iowrite_handler(KSSPLAY *kssplay, void *context, void (*handler)(void *context, uint32_t a, uint32_t d));
+void KSSPLAY_set_memwrite_handler(KSSPLAY *kssplay, void *context, void (*handler)(void *context, uint32_t a, uint32_t d));
 
 uint32_t KSSPLAY_get_device_volume(KSSPLAY *kssplay, uint32_t devnum);
 void KSSPLAY_get_MGStext(KSSPLAY *kssplay, char *buf, int max);
