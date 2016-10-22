@@ -38,4 +38,9 @@ add_library(kss STATIC ${SOURCES})
 target_link_libraries(kss emu2149 emu2212 emu2413 emu8950 emu76489 kmz80)
 
 add_executable(kss2wav EXCLUDE_FROM_ALL src/kss2wav.c)
-target_link_libraries(kss2wav kss)
+if(NOT CMAKE_COMPILER_IS_GNUCC)
+	target_link_libraries(kss2wav kss)
+else()
+	target_link_libraries(kss2wav kss m)
+endif()
+
