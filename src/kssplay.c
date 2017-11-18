@@ -241,7 +241,8 @@ KSSPLAY *KSSPLAY_new(uint32_t rate, uint32_t nch, uint32_t bps) {
     }
 
     kssplay->rcf[i] = RCF_new();
-    RCF_reset(kssplay->rcf[i], rate, 4.7e3, 0.010e-6);
+    // RCF_reset(kssplay->rcf[i], rate, 4.7e3, 0.010e-6);
+    RCF_disable(kssplay->rcf[i]);
     kssplay->dcf[i] = DCF_new();
     DCF_reset(kssplay->dcf[i], rate);
   }
@@ -300,6 +301,16 @@ void KSSPLAY_set_channel_pan(KSSPLAY *kssplay, uint32_t device, uint32_t ch, uin
 }
 
 void KSSPLAY_set_device_pan(KSSPLAY *kssplay, uint32_t device, int32_t pan) { kssplay->device_pan[device] = pan; }
+
+void KSSPLAY_set_rcf(KSSPLAY *kssplay, uint32_t r, uint32_t c) {
+  if ( r != 0 && c != 0 ) {
+    RCF_reset(kssplay->rcf[0], kssplay->rate, (double)r, (double)c/1.0e9);
+    RCF_reset(kssplay->rcf[1], kssplay->rate, (double)r, (double)c/1.0e9);
+  } else {
+    RCF_disable(kssplay->rcf[0]);
+    RCF_disable(kssplay->rcf[1]);
+  }
+}
 
 void KSSPLAY_set_device_lpf(KSSPLAY *kssplay, uint32_t device, uint32_t cutoff) {
   FIR_reset(kssplay->device_fir[0][device], kssplay->rate, cutoff, 31);

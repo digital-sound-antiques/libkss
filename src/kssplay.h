@@ -138,6 +138,7 @@ int KSSPLAY_get_loop_count(KSSPLAY *kssplay);
 int KSSPLAY_get_stop_flag(KSSPLAY *kssplay);
 int KSSPLAY_get_fade_flag(KSSPLAY *kssplay);
 
+void KSSPLAY_set_rcf(KSSPLAY *kssplay, uint32_t r, uint32_t c);
 void KSSPLAY_set_opll_patch(KSSPLAY *kssplay, uint8_t *illdata);
 void KSSPLAY_set_cpu_speed(KSSPLAY *kssplay, uint32_t cpu_speed);
 void KSSPLAY_set_device_lpf(KSSPLAY *kssplay, uint32_t device, uint32_t cutoff);
