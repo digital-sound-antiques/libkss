@@ -29,7 +29,7 @@ static void chunkID(char *buf, char id[4]) {
   buf[3] = id[3];
 }
 
-static void create_wav_header(char *header, int rate, int nch) {
+static void create_wav_header(char *header, int rate, int nch, int play_time) {
   chunkID(header, "RIFF");
   DWORD(header + 4, 0); /* data length * bytePerSample + 36 */
   chunkID(header + 8, "WAVE");
@@ -42,7 +42,7 @@ static void create_wav_header(char *header, int rate, int nch) {
   WORD(header + 32, 2);               /* blockSize */
   WORD(header + 34, 16);              /* bitsPerSample */
   chunkID(header + 36, "data");
-  DWORD(header + 40, 0); /* data length * bytePerSample */
+  DWORD(header + 40, rate * nch * play_time * 2); /* data length * bytePerSample */
 }
 
 #define HLPMSG                                                                                                         \
@@ -51,11 +51,12 @@ static void create_wav_header(char *header, int rate, int nch) {
   "  -f<fade_time>  Fade-out duration in seconds.\n"                                                                   \
   "  -l<loop_num>   Number of loops\n"                                                                                 \
   "  -n[1|2]        Number of channels (default:1)\n"                                                                  \
-  "  -o<file>       Output filename\n"                                                                                 \
+  "  -o<file>       Output filename. -o- means stdout.\n"                                                                                 \
   "  -p<play_time>  Play time in seconds\n"                                                                            \
   "  -q<quality>    Rendering quality 0:LOW 1:HIGH (default:0)\n"                                                      \
   "  -r<play_freq>  Specify the frequency (default:44100)\n"                                                           \
-  "  -s<song_num>   Song number to play\n"
+  "  -s<song_num>   Song number to play\n"                                                                             \
+  "Note: spaces are not accepted between the option character and its parameter."
 
 typedef struct {
   int rate;
@@ -68,6 +69,7 @@ typedef struct {
   int quality;
   char input[MAX_PATH + 4];
   char output[MAX_PATH + 4];
+  int use_stdout;
   int help;
   int error;
 } Options;
@@ -85,6 +87,7 @@ static Options parse_options(int argc, char **argv) {
   options.loop_num = 1;
   options.input[0] = '\0';
   options.output[0] = '\0';
+  options.use_stdout = 0;
   options.help = 0;
   options.error = 0;
 
@@ -120,6 +123,9 @@ static Options parse_options(int argc, char **argv) {
           options.output[j] = argv[i][j + 2];
         }
         options.output[j] = '\0';
+        if (options.output[0] == '-' && options.output[1] == '\0') {
+          options.use_stdout = 1;
+        }
         break;
       default:
         options.error = 1;
@@ -188,7 +194,7 @@ static void mix_stereo(KSSPLAY_PER_CH_OUT *ch_out, int16_t *rch, int16_t *lch) {
 int main(int argc, char *argv[]) {
 
   char header[46];
-  int data_length = 0, i, t;
+  int i, t;
 
   KSSPLAY *kssplay;
   KSS *kss;
@@ -210,7 +216,7 @@ int main(int argc, char *argv[]) {
     exit(1);
   }
 
-  printf("SONG:%02d, PLAYTIME:%d(sec), FADETIME:%d(sec), RATE:%d\n", opt.song_num, opt.play_time, opt.fade_time,
+  fprintf(stderr, "SONG:%02d, PLAYTIME:%d(sec), FADETIME:%d(sec), RATE:%d\n", opt.song_num, opt.play_time, opt.fade_time,
          opt.rate);
 
   if ((kss = KSS_load_file(opt.input)) == NULL) {
@@ -219,18 +225,20 @@ int main(int argc, char *argv[]) {
   }
 
   /* Print title strings */
-  printf("[%s]", kss->idstr);
-  printf("%s\n", kss->title);
+  fprintf(stderr, "[%s]", kss->idstr);
+  fprintf(stderr, "%s\n", kss->title);
   if (kss->extra)
-    printf("%s\n", kss->extra);
+    fprintf(stderr, "%s\n", kss->extra);
 
-  /* Open WAV file */
-  if ((fp = fopen(opt.output, "wb")) == NULL) {
+  /* Open Output file */
+  if (opt.use_stdout) {
+    fp = stdout;
+  } else if ((fp = fopen(opt.output, "wb")) == NULL) {
     fprintf(stderr, "Can't open %s\n", opt.output);
     exit(1);
   }
 
-  create_wav_header(header, opt.rate, opt.nch);
+  create_wav_header(header, opt.rate, opt.nch, opt.play_time);
 
   fwrite(header, sizeof(header), 1, fp); /* Write dummy header */
 
@@ -248,10 +256,9 @@ int main(int argc, char *argv[]) {
 
   /* Create WAV Data */
   for (t = 0; t < opt.play_time; t++) {
-    int pos;
 
-    printf("%03d/%03d", t + 1, opt.play_time);
-    fflush(stdout);
+    fprintf(stderr, "%03d/%03d", t + 1, opt.play_time);
+    fflush(stderr);
 
     if (opt.nch < 2) {
       /** Example of KSSPLAY_calc. */
@@ -275,15 +282,6 @@ int main(int argc, char *argv[]) {
 
     /* Write 1 sec wave block to file */
     fwrite(wavebuf, sizeof(int16_t), opt.rate * opt.nch, fp);
-    pos = ftell(fp);
-
-    /* Update WAVE header */
-    data_length += opt.rate * opt.nch;
-    DWORD(header + 4, data_length * 2 + 36);
-    DWORD(header + 40, data_length * 2);
-    fseek(fp, 0, SEEK_SET);
-    fwrite(header, sizeof(header), 1, fp);
-    fseek(fp, pos, SEEK_SET);
 
     /* If looped, start fadeout */
     if ((KSSPLAY_get_loop_count(kssplay) >= opt.loop_num || (opt.play_time - opt.fade_time) <= t + 1) &&
@@ -296,7 +294,7 @@ int main(int argc, char *argv[]) {
       break;
     }
 
-    printf("\x08\x08\x08\x08\x08\x08\x08");
+    fprintf(stderr, "\x08\x08\x08\x08\x08\x08\x08");
   }
 
   fclose(fp);
@@ -307,6 +305,6 @@ int main(int argc, char *argv[]) {
   KSSPLAY_delete(kssplay);
   KSS_delete(kss);
 
-  printf("\n");
+  fprintf(stderr, "\n");
   return 0;
 }
