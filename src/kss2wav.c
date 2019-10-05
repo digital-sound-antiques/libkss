@@ -56,7 +56,7 @@ static void create_wav_header(char *header, int rate, int nch, int play_time) {
   "  -q<quality>    Rendering quality 0:LOW 1:HIGH (default:0)\n"                                                      \
   "  -r<play_freq>  Specify the frequency (default:44100)\n"                                                           \
   "  -s<song_num>   Song number to play\n"                                                                             \
-  "Note: spaces are not accepted between the option character and its parameter."
+  "Note: spaces are not accepted between the option character and its parameter.\n"
 
 typedef struct {
   int rate;
