@@ -7,7 +7,7 @@
 #include <emscripten.h>
 #endif
 
-#define MAX_RATE 96000
+#define MAX_RATE 192000
 #define MAX_PATH 256
 
 static void WORD(char *buf, uint32_t data) {
