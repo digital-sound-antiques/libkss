@@ -49,7 +49,7 @@ int KSS_isBGMdata(uint8_t *data, uint32_t size) {
       return 1;
     top = (data[2] << 8) + data[1];
     end = (data[4] << 8) + data[3];
-    if (size == (8 + end - top) && data[7] < 2)
+    if (size >= (8 + end - top) && data[7] < 2)
       return 1;
     if (top == 0xA5B7 && data[7] < 2)
       return 1;
