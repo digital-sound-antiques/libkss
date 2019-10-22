@@ -53,7 +53,7 @@ static void create_wav_header(char *header, int rate, int nch, int play_time) {
   "  -n[1|2]        Number of channels (default:1)\n"                                                                  \
   "  -o<file>       Output filename. -o- means stdout.\n"                                                                                 \
   "  -p<play_time>  Play time in seconds\n"                                                                            \
-  "  -q<quality>    Rendering quality 0:LOW 1:HIGH (default:0)\n"                                                      \
+  "  -q<quality>    Rendering quality 0:LOW 1:HIGH (default:1)\n"                                                      \
   "  -r<play_freq>  Specify the frequency (default:44100)\n"                                                           \
   "  -s<song_num>   Song number to play\n"                                                                             \
   "Note: spaces are not accepted between the option character and its parameter.\n"
@@ -90,6 +90,7 @@ static Options parse_options(int argc, char **argv) {
   options.use_stdout = 0;
   options.help = 0;
   options.error = 0;
+  options.quality = 1;
 
   for (i = 1; i < argc; i++) {
     if (argv[i][0] == '-') {
