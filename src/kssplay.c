@@ -79,7 +79,7 @@ int KSSPLAY_set_data(KSSPLAY *kssplay, KSS *kss) {
   uint32_t logical_size, header_size;
   int i;
 
-  if (kss->kssx) {
+  if (kss->kssx && 0 < kss->extra_size) {
     header_size = 16 + kss->extra_size;
     for (i = 0; i < EDSC_MAX; i++) {
       kssplay->device_volume[i] = (kss->vol[i] << (KSSPLAY_VOL_BITS - 8));
