@@ -156,42 +156,6 @@ static Options parse_options(int argc, char **argv) {
   return options;
 }
 
-static void mix_stereo(KSSPLAY_PER_CH_OUT *ch_out, int16_t *rch, int16_t *lch) {
-
-  /* PSG */
-  *rch += ch_out->psg[0] + ch_out->psg[1] + ch_out->psg[2];
-  *lch += ch_out->psg[0] + ch_out->psg[1] + ch_out->psg[2];
-
-  /* SNG */
-  *rch += ch_out->sng[0] + ch_out->sng[1] + ch_out->sng[2] + ch_out->sng[3];
-  *lch += ch_out->sng[0] + ch_out->sng[1] + ch_out->sng[2] + ch_out->sng[3];
-
-  /* SCC */
-  *rch += ch_out->scc[0] + ch_out->scc[2] + ch_out->scc[4];
-  *lch += ch_out->scc[1] + ch_out->scc[3];
-
-  /* OPLL */
-  *rch += ch_out->opll[0] + ch_out->opll[2] + ch_out->opll[4] + ch_out->opll[6] + ch_out->opll[8];
-  *lch += ch_out->opll[1] + ch_out->opll[3] + ch_out->opll[5] + ch_out->opll[7];
-
-  /* OPLL (rhythm, dac) */
-  *rch += ch_out->opll[9] + ch_out->opll[10] + ch_out->opll[11] + ch_out->opll[12] + ch_out->opll[13] + ch_out->opll[14];
-  *lch += ch_out->opll[9] + ch_out->opll[10] + ch_out->opll[11] + ch_out->opll[12] + ch_out->opll[13] + ch_out->opll[14];
-
-  /* OPL */
-  *rch += ch_out->opl[0] + ch_out->opl[2] + ch_out->opl[4] + ch_out->opl[6] + ch_out->opl[8];
-  *lch += ch_out->opl[1] + ch_out->opl[3] + ch_out->opl[5] + ch_out->opl[7];
-
-  /* OPL (rhythm, adpcm) */
-  *rch += ch_out->opl[9] + ch_out->opl[10] + ch_out->opl[11] + ch_out->opl[12] + ch_out->opl[13] + ch_out->opl[14];
-  *lch += ch_out->opl[9] + ch_out->opl[10] + ch_out->opl[11] + ch_out->opl[12] + ch_out->opl[13] + ch_out->opl[14];
-
-  /* DAC */
-  *rch += ch_out->dac[0] + ch_out->dac[1];
-  *lch += ch_out->dac[0] + ch_out->dac[1];
-
-}
-
 int main(int argc, char *argv[]) {
 
   char header[46];
@@ -244,7 +208,7 @@ int main(int argc, char *argv[]) {
   fwrite(header, sizeof(header), 1, fp); /* Write dummy header */
 
   /* INIT KSSPLAY */
-  kssplay = KSSPLAY_new(opt.rate, 1, 16);
+  kssplay = KSSPLAY_new(opt.rate, opt.nch, 16);
   KSSPLAY_set_data(kssplay, kss);
   KSSPLAY_reset(kssplay, opt.song_num, 0);
 
@@ -252,8 +216,19 @@ int main(int argc, char *argv[]) {
   KSSPLAY_set_device_quality(kssplay, EDSC_SCC, opt.quality);
   KSSPLAY_set_device_quality(kssplay, EDSC_OPLL, opt.quality);
 
+  if(opt.nch > 1) {
+    KSSPLAY_set_device_pan(kssplay, EDSC_PSG, -32);
+    KSSPLAY_set_device_pan(kssplay, EDSC_SCC,  32);
+    kssplay->opll_stereo = 1;
+    KSSPLAY_set_channel_pan(kssplay, EDSC_OPLL, 0, 1);
+    KSSPLAY_set_channel_pan(kssplay, EDSC_OPLL, 1, 2);
+    KSSPLAY_set_channel_pan(kssplay, EDSC_OPLL, 2, 1);
+    KSSPLAY_set_channel_pan(kssplay, EDSC_OPLL, 3, 2);
+    KSSPLAY_set_channel_pan(kssplay, EDSC_OPLL, 4, 1);
+    KSSPLAY_set_channel_pan(kssplay, EDSC_OPLL, 5, 2);
+  }
+
   int16_t *wavebuf = malloc(opt.rate * opt.nch * sizeof(int16_t));
-  KSSPLAY_PER_CH_OUT *ch_out = malloc(opt.rate * sizeof(KSSPLAY_PER_CH_OUT));
 
   /* Create WAV Data */
   for (t = 0; t < opt.play_time; t++) {
@@ -261,24 +236,10 @@ int main(int argc, char *argv[]) {
     fprintf(stderr, "%03d/%03d", t + 1, opt.play_time);
     fflush(stderr);
 
-    if (opt.nch < 2) {
-      /** Example of KSSPLAY_calc. */
-      KSSPLAY_calc(kssplay, wavebuf, opt.rate);
-      for (i = 0; i < opt.rate; i++) {
-        /** The following function ensures that wave data is little-endian. */
-        WORD((char *)(wavebuf + i), wavebuf[i]);
-      }
-    } else {
-      /* Example of KSSPLAY_calc_per_ch. */
-      /* Note that all volume controls and filters are ignored. */
-
-      KSSPLAY_calc_per_ch(kssplay, ch_out, opt.rate);
-      for (i = 0; i < opt.rate; i++) {
-        int16_t lch = 0, rch = 0;
-        mix_stereo(ch_out + i, &lch, &rch);
-        WORD((char *)(wavebuf + i * 2), rch);
-        WORD((char *)(wavebuf + i * 2 + 1), lch);
-      }
+    KSSPLAY_calc(kssplay, wavebuf, opt.rate);
+    for (i = 0; i < opt.rate * opt.nch; i++) {
+      /** The following function ensures that wave data is little-endian. */
+      WORD((char *)(wavebuf + i), wavebuf[i]);
     }
 
     /* Write 1 sec wave block to file */
@@ -301,7 +262,6 @@ int main(int argc, char *argv[]) {
   fclose(fp);
 
   free(wavebuf);
-  free(ch_out);
 
   KSSPLAY_delete(kssplay);
   KSS_delete(kss);
