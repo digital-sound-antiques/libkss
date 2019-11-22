@@ -391,3 +391,11 @@ void VM_init_bank(VM *vm, uint32_t mode, uint32_t num, uint32_t offset, uint8_t 
     assert(0);
   }
 }
+
+void VM_write_memory(VM *vm, uint32_t a, uint32_t d) {
+  memwrite(vm, a, d);
+}
+
+void VM_write_io(VM *vm, uint32_t a, uint32_t d) {
+  iowrite(vm, a, d);
+}

@@ -97,6 +97,9 @@ void VM_set_SCC_type(VM *vm, uint32_t scc_type);
 void VM_set_OPLL_type(VM *vm, uint32_t opll_type);
 void VM_set_OPL_type(VM *vm, uint32_t opl_type);
 
+void VM_write_memory(VM *vm, uint32_t a, uint32_t d);
+void VM_write_io(VM *vm, uint32_t a, uint32_t d);
+
 #ifdef __cplusplus
 }
 #endif

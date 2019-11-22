@@ -707,3 +707,11 @@ void KSSPLAY_set_memwrite_handler(KSSPLAY *kssplay, void *context, void (*handle
   kssplay->vm->memwrite_handler_context = context ? context : kssplay;
   kssplay->vm->memwrite_handler = (void (*)(void *, uint32_t, uint32_t))handler;
 }
+
+void KSSPLAY_write_io(KSSPLAY *kssplay, uint32_t a, uint32_t d) {
+  VM_write_io(kssplay->vm, a, d);
+}
+
+void KSSPLAY_write_memory(KSSPLAY *kssplay, uint32_t a, uint32_t d) {
+  VM_write_memory(kssplay->vm, a, d);
+}
