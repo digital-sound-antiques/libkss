@@ -230,6 +230,8 @@ int main(int argc, char *argv[]) {
 
   int16_t *wavebuf = malloc(opt.rate * opt.nch * sizeof(int16_t));
 
+  int32_t written = 0;
+
   /* Create WAV Data */
   for (t = 0; t < opt.play_time; t++) {
 
@@ -244,6 +246,7 @@ int main(int argc, char *argv[]) {
 
     /* Write 1 sec wave block to file */
     fwrite(wavebuf, sizeof(int16_t), opt.rate * opt.nch, fp);
+    written += opt.rate * opt.nch * sizeof(int16_t);
 
     /* If looped, start fadeout */
     if ((KSSPLAY_get_loop_count(kssplay) >= opt.loop_num || (opt.play_time - opt.fade_time) <= t + 1) &&
@@ -258,6 +261,10 @@ int main(int argc, char *argv[]) {
 
     fprintf(stderr, "\x08\x08\x08\x08\x08\x08\x08");
   }
+
+  fseek(fp, 0, SEEK_SET);
+  DWORD(header + 4, 36 + written);
+  fwrite(header, sizeof(header), 1, fp); /* Write dummy header */
 
   fclose(fp);
 
