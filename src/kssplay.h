@@ -158,6 +158,7 @@ void KSSPLAY_set_memwrite_handler(KSSPLAY *kssplay, void *context, void (*handle
 
 uint32_t KSSPLAY_get_device_volume(KSSPLAY *kssplay, uint32_t devnum);
 void KSSPLAY_get_MGStext(KSSPLAY *kssplay, char *buf, int max);
+uint8_t KSSPLAY_get_MGS_jump_count(KSSPLAY *kssplay);
 
 void KSSPLAY_write_memory(KSSPLAY *kssplay, uint32_t a, uint32_t d);
 void KSSPLAY_write_io(KSSPLAY *kssplay, uint32_t a, uint32_t d);

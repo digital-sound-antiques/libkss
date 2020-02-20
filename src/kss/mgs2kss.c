@@ -22,7 +22,7 @@ static uint8_t mgsdrv_init[0x100] = {
     0xDD, 0x77, 0x00, /* LD (IX+0), A */
     0xDD, 0x77, 0x01, /* LD (IX+1), A */
 
-    /* SAVE POINTER TO WORK AREA */
+    /* SAVE MIB POINTER TO WORK AREA */
     0xDD, 0x22, 0xF0, 0x7F, /* LD (07FF0H),IX */
 
     /* FORCE ACTIVATE SCC(MEGAROM MODE) */

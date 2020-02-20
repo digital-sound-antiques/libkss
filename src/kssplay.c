@@ -715,3 +715,13 @@ void KSSPLAY_write_io(KSSPLAY *kssplay, uint32_t a, uint32_t d) {
 void KSSPLAY_write_memory(KSSPLAY *kssplay, uint32_t a, uint32_t d) {
   VM_write_memory(kssplay->vm, a, d);
 }
+
+uint8_t KSSPLAY_get_MGS_jump_count(KSSPLAY *kssplay) {
+  if(kssplay->kss && kssplay->kss->type == MGSDATA) {
+    uint8_t al = MMAP_read_memory(kssplay->vm->mmap, 0x7ff0);
+    uint8_t ah = MMAP_read_memory(kssplay->vm->mmap, 0x7ff1);
+    uint16_t adr = (ah << 8) | al;
+    return MMAP_read_memory(kssplay->vm->mmap, adr + 6);
+  }
+  return 0;
+}
