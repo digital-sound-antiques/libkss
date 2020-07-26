@@ -34,9 +34,8 @@ struct tagKSSPLAY {
   uint32_t nch;
   uint32_t bps;
 
-  uint32_t step;
-  uint32_t step_rest;
-  uint32_t step_left;
+  double step_cnt;
+  double step_inc;
 
   int32_t master_volume;
   int32_t device_volume[EDSC_MAX];
@@ -56,7 +55,7 @@ struct tagKSSPLAY {
   int32_t decoded_length;
 
   uint32_t cpu_speed; /* 0: AutoDetect, 1...N: x1 ... xN */
-  uint32_t vsync_freq;
+  double vsync_freq;
 
   int scc_disable;
   int opll_stereo;

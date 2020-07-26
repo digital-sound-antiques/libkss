@@ -1,12 +1,15 @@
 /*
  * 2004-05-23 : Patched for GG Stereo by RuRuRu
  */
+#include "kssplay.h"
+#include <assert.h>
+#include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
-#include <assert.h>
-#include "kssplay.h"
+
+#define PAL_FREQ 50.0
+#define NTSC_FREQ (3579545.0 / 59718.0) /* 59.94 */
 
 static int32_t volume_table[1 << KSSPLAY_VOL_BITS];
 
@@ -176,7 +179,7 @@ void KSSPLAY_reset(KSSPLAY *kssplay, uint32_t song, uint32_t cpu_speed) {
   kssplay->cpu_speed = cpu_speed;
 
   if (kssplay->vsync_freq == 0) {
-    kssplay->vsync_freq = kssplay->kss->pal_mode ? 50 : 60;
+    kssplay->vsync_freq = kssplay->kss->pal_mode ? PAL_FREQ : NTSC_FREQ;
   }
 
   VM_init_memory(kssplay->vm, kssplay->kss->ram_mode, kssplay->kss->load_adr, kssplay->kss->load_len,
@@ -195,9 +198,8 @@ void KSSPLAY_reset(KSSPLAY *kssplay, uint32_t song, uint32_t cpu_speed) {
   kssplay->fade = 0;
   kssplay->fade_flag = 0;
 
-  kssplay->step = kssplay->vm->clock / kssplay->rate;
-  kssplay->step_rest = kssplay->vm->clock % kssplay->rate;
-  kssplay->step_left = 0;
+  kssplay->step_inc = kssplay->vm->clock / kssplay->rate;
+  kssplay->step_cnt = 0;
   kssplay->decoded_length = 0;
   kssplay->silent = 0;
 
@@ -303,9 +305,9 @@ void KSSPLAY_set_channel_pan(KSSPLAY *kssplay, uint32_t device, uint32_t ch, uin
 void KSSPLAY_set_device_pan(KSSPLAY *kssplay, uint32_t device, int32_t pan) { kssplay->device_pan[device] = pan; }
 
 void KSSPLAY_set_rcf(KSSPLAY *kssplay, uint32_t r, uint32_t c) {
-  if ( r != 0 && c != 0 ) {
-    RCF_reset(kssplay->rcf[0], kssplay->rate, (double)r, (double)c/1.0e9);
-    RCF_reset(kssplay->rcf[1], kssplay->rate, (double)r, (double)c/1.0e9);
+  if (r != 0 && c != 0) {
+    RCF_reset(kssplay->rcf[0], kssplay->rate, (double)r, (double)c / 1.0e9);
+    RCF_reset(kssplay->rcf[1], kssplay->rate, (double)r, (double)c / 1.0e9);
   } else {
     RCF_disable(kssplay->rcf[0]);
     RCF_disable(kssplay->rcf[1]);
@@ -430,15 +432,18 @@ static inline void fade_per_ch(KSSPLAY *kssplay, KSSPLAY_PER_CH_OUT *out) {
   }
 }
 
+static inline void process_vm(KSSPLAY *kssplay) {
+  int step_int = (int)kssplay->step_cnt;
+  kssplay->step_cnt += kssplay->step_inc;
+  if (step_int > 1) {
+    kssplay->step_cnt -= step_int;
+    VM_exec(kssplay->vm, step_int);
+  }
+}
+
 static inline void calc_per_ch(KSSPLAY *kssplay, KSSPLAY_PER_CH_OUT *out) {
 
-  kssplay->step_left += kssplay->step_rest;
-  if (kssplay->step_left >= kssplay->rate) {
-    kssplay->step_left -= kssplay->rate;
-    VM_exec(kssplay->vm, kssplay->step + 1);
-  } else {
-    VM_exec(kssplay->vm, kssplay->step);
-  }
+  process_vm(kssplay);
 
   memset(out, 0, sizeof(*out));
 
@@ -490,13 +495,7 @@ static inline void calc_mono(KSSPLAY *kssplay, int16_t *buf, uint32_t length) {
   }
 
   for (i = 0; i < length; i++) {
-    kssplay->step_left += kssplay->step_rest;
-    if (kssplay->step_left >= kssplay->rate) {
-      kssplay->step_left -= kssplay->rate;
-      VM_exec(kssplay->vm, kssplay->step + 1);
-    } else {
-      VM_exec(kssplay->vm, kssplay->step);
-    }
+    process_vm(kssplay);
 
     if (kssplay->kss->msx_audio && !kssplay->device_mute[EDSC_OPL]) {
       d = apply_volume(FIR_calc(kssplay->device_fir[0][EDSC_OPL], OPL_calc(kssplay->vm->opl)), volume[EDSC_OPL]);
@@ -548,13 +547,7 @@ static inline void calc_stereo(KSSPLAY *kssplay, int16_t *buf, uint32_t length) 
   }
 
   for (i = 0; i < length; i++) {
-    kssplay->step_left += kssplay->step_rest;
-    if (kssplay->step_left >= kssplay->rate) {
-      kssplay->step_left -= kssplay->rate;
-      VM_exec(kssplay->vm, kssplay->step + 1);
-    } else {
-      VM_exec(kssplay->vm, kssplay->step);
-    }
+    process_vm(kssplay);
 
     if (kssplay->kss->msx_audio && !kssplay->device_mute[EDSC_OPL]) {
       c = FIR_calc(kssplay->device_fir[0][EDSC_OPL], OPL_calc(kssplay->vm->opl));
@@ -629,13 +622,7 @@ void KSSPLAY_calc(KSSPLAY *kssplay, int16_t *buf, uint32_t length) {
 void KSSPLAY_calc_silent(KSSPLAY *kssplay, uint32_t length) {
   uint32_t i;
   for (i = 0; i < length; i++) {
-    kssplay->step_left += kssplay->step_rest;
-    if (kssplay->step_left >= kssplay->rate) {
-      kssplay->step_left -= kssplay->rate;
-      VM_exec(kssplay->vm, kssplay->step + 1);
-    } else {
-      VM_exec(kssplay->vm, kssplay->step);
-    }
+    process_vm(kssplay);
   }
   kssplay->decoded_length += length;
   LPDETECT_update(kssplay->vm->lpde, kssplay->decoded_length * 1000 / kssplay->rate, 30 * 1000, 1000);
@@ -699,25 +686,23 @@ void KSSPLAY_set_channel_mask(KSSPLAY *kssplay, uint32_t device, uint32_t mask) 
 
 void KSSPLAY_set_silent_limit(KSSPLAY *kssplay, uint32_t time_in_ms) { kssplay->silent_limit = time_in_ms; }
 
-void KSSPLAY_set_iowrite_handler(KSSPLAY *kssplay, void *context, void (*handler)(void *context, uint32_t a, uint32_t d)) {
+void KSSPLAY_set_iowrite_handler(KSSPLAY *kssplay, void *context,
+                                 void (*handler)(void *context, uint32_t a, uint32_t d)) {
   kssplay->vm->iowrite_handler_context = context ? context : kssplay;
   kssplay->vm->iowrite_handler = (void (*)(void *, uint32_t, uint32_t))handler;
 }
-void KSSPLAY_set_memwrite_handler(KSSPLAY *kssplay, void *context, void (*handler)(void *context, uint32_t a, uint32_t d)) {
+void KSSPLAY_set_memwrite_handler(KSSPLAY *kssplay, void *context,
+                                  void (*handler)(void *context, uint32_t a, uint32_t d)) {
   kssplay->vm->memwrite_handler_context = context ? context : kssplay;
   kssplay->vm->memwrite_handler = (void (*)(void *, uint32_t, uint32_t))handler;
 }
 
-void KSSPLAY_write_io(KSSPLAY *kssplay, uint32_t a, uint32_t d) {
-  VM_write_io(kssplay->vm, a, d);
-}
+void KSSPLAY_write_io(KSSPLAY *kssplay, uint32_t a, uint32_t d) { VM_write_io(kssplay->vm, a, d); }
 
-void KSSPLAY_write_memory(KSSPLAY *kssplay, uint32_t a, uint32_t d) {
-  VM_write_memory(kssplay->vm, a, d);
-}
+void KSSPLAY_write_memory(KSSPLAY *kssplay, uint32_t a, uint32_t d) { VM_write_memory(kssplay->vm, a, d); }
 
 uint8_t KSSPLAY_get_MGS_jump_count(KSSPLAY *kssplay) {
-  if(kssplay->kss && kssplay->kss->type == MGSDATA) {
+  if (kssplay->kss && kssplay->kss->type == MGSDATA) {
     uint8_t al = MMAP_read_memory(kssplay->vm->mmap, 0x7ff0);
     uint8_t ah = MMAP_read_memory(kssplay->vm->mmap, 0x7ff1);
     uint16_t adr = (ah << 8) | al;

@@ -162,19 +162,9 @@ static void exec_setup(VM *vm, uint32_t pc) {
   vm->context.regs8[REGID_HALTED] = 0;
 }
 
-/* Set the next event */
-static inline void adjust_vsync_cycles(VM *vm) {
-  vm->vsync_cycles_left += vm->vsync_cycles_step;
-  if (vm->vsync_cycles_left >= vm->vsync_freq) {
-    vm->vsync_cycles_left -= vm->vsync_freq;
-    kmevent_settimer(&vm->kme, vm->vsync_id, vm->vsync_cycles + 1);
-  } else {
-    kmevent_settimer(&vm->kme, vm->vsync_id, vm->vsync_cycles);
-  }
-}
 /* Handler for KMEVENT */
 static void vsync(KMEVENT *event, KMEVENT_ITEM_ID curid, VM *vm) {
-  adjust_vsync_cycles(vm);
+  kmevent_settimer(&vm->kme, vm->vsync_id, vm->vsync_cycles);
   if (vm->context.regs8[REGID_HALTED])
     exec_setup(vm, vm->vsync_adr);
 }
@@ -225,12 +215,9 @@ void VM_exec_func(VM *vm, uint32_t func_adr) { exec_setup(vm, func_adr); }
 
 void VM_set_wioproc(VM *vm, uint32_t a, VM_WIOPROC p) { vm->WIOPROC[a] = p; }
 
-void VM_set_clock(VM *vm, uint32_t clock, uint32_t vsync_freq) {
+void VM_set_clock(VM *vm, uint32_t clock, double vsync_freq) {
   vm->clock = clock;
-  vm->vsync_freq = vsync_freq;
   vm->vsync_cycles = clock / vsync_freq;
-  vm->vsync_cycles_left = 0;
-  vm->vsync_cycles_step = clock % vsync_freq;
   kmevent_settimer(&vm->kme, vm->vsync_id, vm->vsync_cycles);
 }
 
@@ -294,7 +281,7 @@ void VM_set_OPLL_type(VM *vm, uint32_t opll_type) {
 
 void VM_set_OPL_type(VM *vm, uint32_t opl_type) { vm->opl_type = opl_type; }
 
-void VM_reset(VM *vm, uint32_t clock, uint32_t init_adr, uint32_t vsync_adr, uint32_t vsync_freq, uint32_t song,
+void VM_reset(VM *vm, uint32_t clock, uint32_t init_adr, uint32_t vsync_adr, double vsync_freq, uint32_t song,
               uint32_t DA8) {
   /* Reset KMZ80 */
   kmz80_reset(&vm->context);
