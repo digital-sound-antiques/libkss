@@ -13,13 +13,13 @@ $ cd libkss
 $ mkdir build
 $ cd build
 $ cmake ..
-$ make
+$ cmake --build .
 ```
 
 You can also build the KSS to WAV converter binary as follows.
 
 ```
-$ make kss2wav
+$ cmake --build . --target kss2wav
 ```
 
 # NOTE
