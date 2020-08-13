@@ -125,15 +125,22 @@ int KSSPLAY_set_data(KSSPLAY *kssplay, KSS *kss) {
 }
 
 static uint32_t getclk(KSSPLAY *kssplay) {
-  if (kssplay->cpu_speed == 0) {
+  switch (kssplay->cpu_speed) {
+  case 0:
     if (kssplay->kss->fmpac || kssplay->kss->msx_audio) {
-      return MSX_CLK * 2;
+      return MSX_CLK * 2; /* 7.16MHz */
     } else {
       return MSX_CLK;
     }
-  } else if (kssplay->cpu_speed < 5) {
-    return MSX_CLK << (kssplay->cpu_speed - 1);
-  } else {
+  case 1:
+    return MSX_CLK;
+  case 2:
+    return MSX_CLK * 3 / 2; /* 5.38MHz */
+  case 3:
+    return MSX_CLK * 2;     /* 7.16MHz */
+  case 4:
+    return MSX_CLK * 8;     /* 28.64MHz (turbo-R) */
+  default:
     return MSX_CLK;
   }
 }
