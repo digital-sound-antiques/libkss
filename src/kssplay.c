@@ -125,24 +125,17 @@ int KSSPLAY_set_data(KSSPLAY *kssplay, KSS *kss) {
 }
 
 static uint32_t getclk(KSSPLAY *kssplay) {
-  switch (kssplay->cpu_speed) {
-  case 0:
+  if (kssplay->cpu_speed == 0) {
     if (kssplay->kss->fmpac || kssplay->kss->msx_audio) {
       return MSX_CLK * 2; /* 7.16MHz */
     } else {
       return MSX_CLK;
     }
-  case 1:
-    return MSX_CLK;
-  case 2:
-    return MSX_CLK * 3 / 2; /* 5.38MHz */
-  case 3:
-    return MSX_CLK * 2;     /* 7.16MHz */
-  case 4:
-    return MSX_CLK * 8;     /* 28.64MHz (turbo-R) */
-  default:
-    return MSX_CLK;
   }
+  if (kssplay->cpu_speed <= 8) {
+    return MSX_CLK * kssplay->cpu_speed;
+  }
+  return MSX_CLK;
 }
 
 void KSSPLAY_get_MGStext(KSSPLAY *kssplay, char *buf, int max) {
