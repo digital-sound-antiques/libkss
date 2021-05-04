@@ -22,6 +22,14 @@ You can also build the KSS to WAV converter binary as follows.
 $ cmake --build . --target kss2wav
 ```
 
-# NOTE
+# Note
 The `kss-drivers` submodule on which libkss depends, does NOT follow the libkss's license.
 See README of the submodule.
+
+# Acknowledgement
+- NEZplug and MBM2KSS by Mamiya - http://nezplug.sourceforge.net/
+- MGSDRV by GIGAMIX/Ain - http://www.gigamixonline.com/mgsdrv/
+- KINROU5 by Keiichi Kuroda
+- MPK by K-KAZ
+- OPX4KSS by Mikasen
+- MPK2KSS by Naruto
