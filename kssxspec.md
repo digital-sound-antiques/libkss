@@ -36,11 +36,11 @@ Later Mamiya extended the format for MSX-MUSIC, MSX-AUDIO, SEGA mk3 and GameGear
 
                    if bit1 = '1', SEGA mode
                      D76543210
-                     0000RG1F
-                         |||+- bit0: Use FMUNIT
-                         ||+-- bit1: 1 (SN76489 is enabled)
-                         |+--- bit2: Use GG stereo
-                         +---- bit3: Use RAM
+                      0000RG1F
+                          |||+- bit0: Use FMUNIT
+                          ||+-- bit1: 1 (SN76489 is enabled)
+                          |+--- bit2: Use GG stereo
+                          +---- bit3: Use RAM
                   
 0010    m BYTES   extra header data (see the next section)
 0010+m  n BYTES   specified length initial data
