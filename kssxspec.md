@@ -1,6 +1,7 @@
 # KSSX Format Spec
 This document is an unofficial format specification of extended KSS (KSSX), derivative from [KSS Music Format v1.03](http://www.purose.net/befis/download/nezplug/kssspec.txt).
 
+## HISTORY
 The KSS file is a kind of machine memory image for Z80-based emulators to reproduce the SCC and PSG sound of MSX. The original KSS format was proposed by Cync. If the author remebers correctly, the name KSS stands for Konami Sound System and the original format only supports PSG and SCC. The original KSS player was distributed through internet without the official KSS format specification document.
 
 Later Mamiya extended the format for MSX-MUSIC, MSX-AUDIO, SEGA mk3 and GameGear sound. Then he also documented [the format](http://www.purose.net/befis/download/nezplug/kssspec.txt).
@@ -17,7 +18,6 @@ Later Mamiya extended the format for MSX-MUSIC, MSX-AUDIO, SEGA mk3 and GameGear
 000D   BYTE      8/16kbytes banked extra data blocks support
                    bits 0-6: number of 8/16kbytes banked extra data blocks
                    bit 7: if set, this song uses KSS 8k mapper
-                   See [iomap](./iomap.md) for mapper memory layout
 000E   BYTE      extra header size 00H or 10H
 000F   BYTE      extra sound chip support.
                    bit0: Use YM2413
