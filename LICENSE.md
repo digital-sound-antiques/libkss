@@ -1,6 +1,6 @@
 ## Caveat
-The `kss-drivers` submodule that libkss depends on are not compliant with this license.
-See README of the submodule.
+[kss-drivers] submodule that libkss depends on are not compliant with this license.
+[kss-drivers]: https://github.com/digital-sound-antiques/kss-drivers
 
 ## libkss License 
 
