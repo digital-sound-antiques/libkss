@@ -26,6 +26,8 @@ $ cmake --build . --target kss2wav
 The [kss-drivers] submodule on which libkss depends, does NOT follow the libkss's license.
 See README of the submodule.
 
+[kss-drivers]: https://github.com/digital-sound-antiques/kss-drivers/
+
 ## Purge drivers
 If you would like to build libkss without kss-drivers, define `EXCLUDE_DRIVER_ALL` macro in CMakeLists.txt.
 
