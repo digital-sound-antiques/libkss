@@ -1,5 +1,5 @@
 ## Caveat
-The `kss-drivers` submodule on which libkss depends is NOT follow this license.
+The `kss-drivers` submodule that libkss depends on are not compliant with this license.
 See README of the submodule.
 
 ## libkss License 
