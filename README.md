@@ -32,11 +32,18 @@ See README of the submodule.
 If you would like to build libkss without kss-drivers, define `EXCLUDE_DRIVER_ALL` macro in CMakeLists.txt.
 
 ```
-// CMakeLists.txt
+# CMakeLists.txt
 cmake_minimum_required(VERSION 2.8)
 project(libkss)
 
 add_compile_definitions(EXCLUDE_DRIVER_ALL)
+# add_compile_definitions(EXCLUDE_DRIVER_MGSDRV)
+# add_compile_definitions(EXCLUDE_DRIVER_KINROU)
+# add_compile_definitions(EXCLUDE_DRIVER_MBMDRV)
+# add_compile_definitions(EXCLUDE_DRIVER_MPK106)
+# add_compile_definitions(EXCLUDE_DRIVER_MPK103)
+# add_compile_definitions(EXCLUDE_DRIVER_OPX4KSS)
+...
 ```
 
 ## Load driver binary at runtime
