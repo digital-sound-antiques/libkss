@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 project(libkss)
 
+# add_compile_definitions(EXCLUDE_DRIVER_ALL)
+
 if(MSVC)
   set(CMAKE_C_FLAGS "/Ox /W3 /wd4996")
 else()

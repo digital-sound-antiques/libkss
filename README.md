@@ -23,8 +23,29 @@ $ cmake --build . --target kss2wav
 ```
 
 # Note
-The `kss-drivers` submodule on which libkss depends, does NOT follow the libkss's license.
+The [kss-drivers] submodule on which libkss depends, does NOT follow the libkss's license.
 See README of the submodule.
+
+## Purge drivers
+If you would like to build libkss without kss-drivers, define `EXCLUDE_DRIVER_ALL` macro in CMakeLists.txt.
+
+```
+// CMakeLists.txt
+cmake_minimum_required(VERSION 2.8)
+project(libkss)
+
+add_compile_definitions(EXCLUDE_DRIVER_ALL)
+```
+
+## Load driver binary at runtime
+The driver binary can be loaded from a file or memory at runtime using the following functions.
+
+```
+int KSS_set_<driver>(const uint8_t *data, uint32_t size);
+int KSS_load_<driver>(const char *filename);
+```
+
+where `<dirver>` is mgsdrv, mbmdrv, kinrou, mpk106, mpk103, opx2kss or fmbios.
 
 # Acknowledgement
 - NEZplug and MBM2KSS by Mamiya - http://nezplug.sourceforge.net/
