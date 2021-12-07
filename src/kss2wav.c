@@ -264,7 +264,8 @@ int main(int argc, char *argv[]) {
 
   fseek(fp, 0, SEEK_SET);
   DWORD(header + 4, 36 + written);
-  fwrite(header, sizeof(header), 1, fp); /* Write dummy header */
+  DWORD(header + 40, written);
+  fwrite(header, sizeof(header), 1, fp); // write fixed header
 
   fclose(fp);
 
