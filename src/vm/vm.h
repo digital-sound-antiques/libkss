@@ -77,7 +77,7 @@ enum { VM_SCC_AUTO = 0, VM_SCC_STANDARD, VM_SCC_ENHANCED };
 enum { VM_OPLL_2413 = 0, VM_OPLL_VRC7, VM_OPLL_281B };
 enum { VM_OPL_PANA = 0, VM_OPL_TOSH, VM_OPL_PHIL };
 
-VM *VM_new();
+VM *VM_new(int rate);
 void VM_delete(VM *vm);
 void VM_reset_device(VM *vm);
 void VM_reset(VM *vm, uint32_t cpu_clk, uint32_t pc, uint32_t play_adr, double vsync_freq, uint32_t song,
