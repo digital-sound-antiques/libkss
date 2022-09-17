@@ -312,7 +312,16 @@ static void reset(KSS2VGM *_this) {
   _this->vgm_data = data_array_new();
 }
 
-KSS2VGM_Result *KSS2VGM_kss2vgm(KSS2VGM *_this, KSS *kss, int play_time, int song_num, int loop_num, int volume) {
+/**
+ * @param _this KSS2VGM instance.
+ * @param kss target KSS object.
+ * @param duration maximum conversion time in milliseconds.
+ * @param song target song number.
+ * @param loop maximum loop count.
+ * @param volume VGM volume multiplier.
+ * @return KSS2VGM_Result*
+ */
+KSS2VGM_Result *KSS2VGM_kss2vgm(KSS2VGM *_this, KSS *kss, int duration, int song, int loop, int volume) {
 
   reset(_this);
 
@@ -320,17 +329,23 @@ KSS2VGM_Result *KSS2VGM_kss2vgm(KSS2VGM *_this, KSS *kss, int play_time, int son
   KSSPLAY_set_iowrite_handler(kssplay, _this, iowrite_handler);
   KSSPLAY_set_memwrite_handler(kssplay, _this, memwrite_handler);
   KSSPLAY_set_data(kssplay, kss);
-  KSSPLAY_reset(kssplay, song_num, 0);
+  KSSPLAY_reset(kssplay, song, 0);
 
   int i, t;
-  for (t = 0; t < play_time; t++) {
-    for (i = 0; i < 44100; i++) {
+  int blocks = duration * 100 / 1000; // (block = 10ms)
+
+  if (blocks == 0) {
+    blocks = 300 * 100;
+  }
+
+  for (t = 0; t < blocks; t++) {
+    for (i = 0; i < 441; i++) {
       KSSPLAY_calc_silent(kssplay, 1);
       _this->total_samples++;
       if (KSSPLAY_get_stop_flag(kssplay)) {
         break;
       }
-      if ((loop_num > 0 && KSSPLAY_get_loop_count(kssplay) >= loop_num)) {
+      if ((loop > 0 && KSSPLAY_get_loop_count(kssplay) >= loop)) {
         break;
       }
     }
