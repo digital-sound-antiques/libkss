@@ -1,7 +1,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include "kssplay.h"
+
+#include "../src/kssplay.h"
 
 #ifdef EMSCRIPTEN
 #include <emscripten.h>

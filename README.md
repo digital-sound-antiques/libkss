@@ -16,7 +16,8 @@ $ cmake ..
 $ cmake --build .
 ```
 
-You can also build the KSS to WAV converter binary as follows.
+# KSS2WAV Example
+You can also build the KSS to WAV converter example as follows.
 
 ```
 $ cmake --build . --target kss2wav
