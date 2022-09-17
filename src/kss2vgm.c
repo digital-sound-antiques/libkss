@@ -355,6 +355,9 @@ void KSS2VGM_delete(KSS2VGM *_this) {
   }
 }
 
+uint8_t *KSS2VGM_Result_vgm_ptr(KSS2VGM_Result *obj) { return obj->vgm; }
+uint32_t KSS2VGM_Result_vgm_size(KSS2VGM_Result *obj) { return obj->vgm_size; }
+
 void KSS2VGM_Result_delete(KSS2VGM_Result *obj) {
   if (obj != NULL) {
     free(obj->vgm);

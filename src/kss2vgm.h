@@ -42,9 +42,10 @@ typedef struct tagKSS2VGM_Result {
 
 KSS2VGM* KSS2VGM_new(void);
 KSS2VGM_Result *KSS2VGM_kss2vgm(KSS2VGM *_this, KSS *kss, int play_time, int song_num, int loop_num, int volume);
-void KSS2VGM_print_info(KSS2VGM *_this);
 void KSS2VGM_delete(KSS2VGM *_this);
 void KSS2VGM_Result_delete(KSS2VGM_Result *obj);
+uint8_t *KSS2VGM_Result_vgm_ptr(KSS2VGM_Result *obj);
+uint32_t KSS2VGM_Result_vgm_size(KSS2VGM_Result *obj);
 
 #ifdef __cplusplus
 }
