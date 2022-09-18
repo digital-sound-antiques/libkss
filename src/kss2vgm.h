@@ -1,8 +1,8 @@
 #ifndef _KSS2VGM_H_
 #define _KSS2VGM_H_
 
-#include <stdint.h>
 #include "kssplay.h"
+#include <stdint.h>
 
 #ifdef __cplusplus
 extern "C" {
@@ -30,8 +30,8 @@ typedef struct tagKSS2VGM {
   int use_opl;
   int use_y8950_adpcm;
 
-  KSS2VGM_DataArray* ini_data;
-  KSS2VGM_DataArray* vgm_data;
+  KSS2VGM_DataArray *ini_data;
+  KSS2VGM_DataArray *vgm_data;
 
 } KSS2VGM;
 
@@ -40,8 +40,9 @@ typedef struct tagKSS2VGM_Result {
   uint32_t vgm_size;
 } KSS2VGM_Result;
 
-KSS2VGM* KSS2VGM_new(void);
-KSS2VGM_Result *KSS2VGM_kss2vgm(KSS2VGM *_this, KSS *kss, int duration, int song, int loop, int volume);
+KSS2VGM *KSS2VGM_new(void);
+KSS2VGM_Result *KSS2VGM_kss2vgm(KSS2VGM *_this, KSS *kss, int duration, int song, int loop, int volume,
+                                int (*callback)(uint32_t progress, uint32_t total));
 void KSS2VGM_delete(KSS2VGM *_this);
 void KSS2VGM_Result_delete(KSS2VGM_Result *obj);
 uint8_t *KSS2VGM_Result_vgm_ptr(KSS2VGM_Result *obj);

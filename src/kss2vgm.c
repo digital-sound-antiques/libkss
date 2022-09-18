@@ -319,10 +319,11 @@ static void reset(KSS2VGM *_this) {
  * @param song target song number.
  * @param loop maximum loop count.
  * @param volume VGM volume multiplier.
+ * @param callback Callback for progress / abort.
  * @return KSS2VGM_Result*
  */
-KSS2VGM_Result *KSS2VGM_kss2vgm(KSS2VGM *_this, KSS *kss, int duration, int song, int loop, int volume) {
-
+KSS2VGM_Result *KSS2VGM_kss2vgm(KSS2VGM *_this, KSS *kss, int duration, int song, int loop, int volume,
+                                int (*callback)(uint32_t progress, uint32_t total)) {
   reset(_this);
 
   KSSPLAY *kssplay = KSSPLAY_new(44100, 1, 16);
@@ -331,14 +332,14 @@ KSS2VGM_Result *KSS2VGM_kss2vgm(KSS2VGM *_this, KSS *kss, int duration, int song
   KSSPLAY_set_data(kssplay, kss);
   KSSPLAY_reset(kssplay, song, 0);
 
-  int i, t;
-  int blocks = duration * 100 / 1000; // (block = 10ms)
+  int i, block;
+  int maxBlocks = duration * 100 / 1000; // (block = 10ms)
 
-  if (blocks == 0) {
-    blocks = 300 * 100;
+  if (maxBlocks == 0) {
+    maxBlocks = 300 * 100;
   }
 
-  for (t = 0; t < blocks; t++) {
+  for (block = 0; block < maxBlocks; block++) {
     for (i = 0; i < 441; i++) {
       KSSPLAY_calc_silent(kssplay, 1);
       _this->total_samples++;
@@ -349,10 +350,14 @@ KSS2VGM_Result *KSS2VGM_kss2vgm(KSS2VGM *_this, KSS *kss, int duration, int song
         break;
       }
     }
+    if (callback != NULL) {
+      if (callback(block + 1, maxBlocks) != 0) {
+        goto __Abort;
+      }
+    }
   }
 
   KSSPLAY_delete(kssplay);
-
   write_eos_command(_this);
 
   if (_this->use_y8950_adpcm) {
@@ -360,6 +365,10 @@ KSS2VGM_Result *KSS2VGM_kss2vgm(KSS2VGM *_this, KSS *kss, int duration, int song
   }
 
   return build_vgm(_this, volume);
+
+__Abort:
+  KSSPLAY_delete(kssplay);
+  return NULL;
 }
 
 void KSS2VGM_delete(KSS2VGM *_this) {
