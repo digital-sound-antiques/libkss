@@ -301,78 +301,129 @@ static KSS2VGM_Result *build_vgm(KSS2VGM *_this, int volume) {
 
 KSS2VGM *KSS2VGM_new(void) {
   KSS2VGM *obj = calloc(sizeof(KSS2VGM), 1);
+  obj->kssplay = KSSPLAY_new(44100, 1, 16);
   return obj;
 }
 
 static void reset(KSS2VGM *_this) {
   data_array_delete(_this->ini_data);
   data_array_delete(_this->vgm_data);
-  memset(_this, 0, sizeof(KSS2VGM));
+
+  // clear except kssplay instance
+  size_t head_size = sizeof(KSSPLAY *);
+  memset(_this + head_size, 0, sizeof(KSS2VGM) - head_size);
+
   _this->ini_data = data_array_new();
   _this->vgm_data = data_array_new();
 }
 
 /**
+ * @brief Convert KSS to VGM
+ *        If non-blocking conversion is needed, call KSS2VGM_setup, KSS2VGM_process and KSS2VGM_get_result instead.
+ *
  * @param _this KSS2VGM instance.
  * @param kss target KSS object.
  * @param duration maximum conversion time in milliseconds.
  * @param song target song number.
  * @param loop maximum loop count.
  * @param volume VGM volume multiplier.
- * @param callback Callback for progress / abort.
  * @return KSS2VGM_Result*
  */
-KSS2VGM_Result *KSS2VGM_kss2vgm(KSS2VGM *_this, KSS *kss, int duration, int song, int loop, int volume,
-                                int (*callback)(uint32_t progress, uint32_t total)) {
+KSS2VGM_Result *KSS2VGM_kss2vgm(KSS2VGM *_this, KSS *kss, int duration, int song, int loop, int volume) {
+  KSS2VGM_setup(_this, kss, duration, song, loop, volume);
+  while (KSS2VGM_process(_this) == 0)
+    ;
+  return KSS2VGM_get_result(_this);
+}
+
+/**
+ * @brief Prepare for KSS to VGM conversion for KSS2VGM_process.
+ *        If synchronous conversion is needed, call KSS2VGM_kss2vgm instead.
+ *
+ * @param _this KSS2VGM instance.
+ * @param kss target KSS object.
+ * @param duration maximum conversion time in ms (max 3600000ms = 1hour).
+ * @param song target song number.
+ * @param loop maximum loop count.
+ * @param volume VGM volume multiplier.
+ * @return KSS2VGM_Result*
+ */
+void KSS2VGM_setup(KSS2VGM *_this, KSS *kss, int duration, int song, int loop, int volume) {
+
   reset(_this);
 
-  KSSPLAY *kssplay = KSSPLAY_new(44100, 1, 16);
-  KSSPLAY_set_iowrite_handler(kssplay, _this, iowrite_handler);
-  KSSPLAY_set_memwrite_handler(kssplay, _this, memwrite_handler);
-  KSSPLAY_set_data(kssplay, kss);
-  KSSPLAY_reset(kssplay, song, 0);
+  KSSPLAY_set_iowrite_handler(_this->kssplay, _this, iowrite_handler);
+  KSSPLAY_set_memwrite_handler(_this->kssplay, _this, memwrite_handler);
+  KSSPLAY_set_data(_this->kssplay, kss);
+  KSSPLAY_reset(_this->kssplay, song, 0);
 
-  int i, block;
-  int maxBlocks = duration * 100 / 1000; // (block = 10ms)
-
-  if (maxBlocks == 0) {
-    maxBlocks = 300 * 100;
+  _this->loop = loop;
+  _this->volume = volume;
+  if (duration == 0) {
+    _this->max_samples = 44100 * 300;
+  } else if (duration < 3600 * 1000) {
+    _this->max_samples = 441 * duration / 10;
+  } else {
+    _this->max_samples = 44100 * 3600;
   }
-
-  for (block = 0; block < maxBlocks; block++) {
-    for (i = 0; i < 441; i++) {
-      KSSPLAY_calc_silent(kssplay, 1);
-      _this->total_samples++;
-      if (KSSPLAY_get_stop_flag(kssplay)) {
-        break;
-      }
-      if ((loop > 0 && KSSPLAY_get_loop_count(kssplay) >= loop)) {
-        break;
-      }
-    }
-    if (callback != NULL) {
-      if (callback(block + 1, maxBlocks) != 0) {
-        goto __Abort;
-      }
-    }
-  }
-
-  KSSPLAY_delete(kssplay);
-  write_eos_command(_this);
-
-  if (_this->use_y8950_adpcm) {
-    ini_write(_this, y8950_adpcm_init, 15);
-  }
-
-  return build_vgm(_this, volume);
-
-__Abort:
-  KSSPLAY_delete(kssplay);
-  return NULL;
 }
+
+/**
+ * @brief Execute KSS to VGM conversion process. It generates the VGM commands for 1 second per call. 
+ *        Note that KSS2VGM_setup must be called before the first call of this function.
+ *
+ * @param _this KSS2VGM instance.
+ * @return Zero if the conversion process is not completed. 
+ *         The user should call KSS2VGM_process repatedly until it returns the non-zero value.
+ *         Otherwise, the whole conversion process is completed. KSS2VGM_get_result can be used to obtain the result.
+ */
+int KSS2VGM_process(KSS2VGM *_this) {
+
+  int i, completed = 0;
+
+  if (_this->completed) {
+    return 1;
+  }
+
+  for (i = 0; i < 44100; i++) {
+    KSSPLAY_calc_silent(_this->kssplay, 1);
+    _this->total_samples++;
+    if (_this->total_samples == _this->max_samples) {
+      completed = 1;
+      break;
+    }
+    if (KSSPLAY_get_stop_flag(_this->kssplay) != 0) {
+      completed = 1;
+      break;
+    }
+    if (_this->loop > 0 && KSSPLAY_get_loop_count(_this->kssplay) >= _this->loop) {
+      completed = 1;
+      break;
+    }
+  }
+
+  if (completed) {
+    write_eos_command(_this);
+    if (_this->use_y8950_adpcm) {
+      ini_write(_this, y8950_adpcm_init, 15);
+    }
+    _this->completed = 1;
+  }
+
+  return _this->completed;
+}
+
+/**
+ * @brief Get the conversion result.
+ *
+ * @param _this KSS2VGM instance.
+ * @return the result.
+ */
+KSS2VGM_Result *KSS2VGM_get_result(KSS2VGM *_this) { return build_vgm(_this, _this->volume); }
 
 void KSS2VGM_delete(KSS2VGM *_this) {
   if (_this != NULL) {
+    KSSPLAY_delete(_this->kssplay);
     data_array_delete(_this->ini_data);
     data_array_delete(_this->vgm_data);
     free(_this);
