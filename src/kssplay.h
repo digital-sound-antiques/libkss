@@ -6,6 +6,7 @@
 #include "filters/filter.h"
 #include "filters/rc_filter.h"
 #include "filters/dc_filter.h"
+#include "rconv/psg_rconv.h"
 #include "kss/kss.h"
 #include "vm/vm.h"
 
@@ -59,6 +60,8 @@ struct tagKSSPLAY {
 
   int scc_disable;
   int opll_stereo;
+
+  PSG_RateConv *psg_rconv;
 };
 
 /**
@@ -137,6 +140,7 @@ int KSSPLAY_get_loop_count(KSSPLAY *kssplay);
 int KSSPLAY_get_stop_flag(KSSPLAY *kssplay);
 int KSSPLAY_get_fade_flag(KSSPLAY *kssplay);
 
+void KSSPLAY_set_def(KSSPLAY *kssplay, int enable);
 void KSSPLAY_set_rcf(KSSPLAY *kssplay, uint32_t r, uint32_t c);
 void KSSPLAY_set_opll_patch(KSSPLAY *kssplay, uint8_t *illdata);
 void KSSPLAY_set_cpu_speed(KSSPLAY *kssplay, uint32_t cpu_speed);

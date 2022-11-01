@@ -207,6 +207,8 @@ void KSSPLAY_reset(KSSPLAY *kssplay, uint32_t song, uint32_t cpu_speed) {
     VM_set_wioproc(kssplay->vm, 0x44, mgs_text_update);
   }
   memset(mgs_text, 0, 128);
+
+  PSG_RateConv_reset(kssplay->psg_rconv, kssplay->vm->psg, kssplay->rate);
 }
 
 KSSPLAY *KSSPLAY_new(uint32_t rate, uint32_t nch, uint32_t bps) {
@@ -236,6 +238,8 @@ KSSPLAY *KSSPLAY_new(uint32_t rate, uint32_t nch, uint32_t bps) {
   kssplay->bps = bps;
   kssplay->silent_limit = 5000;
 
+  kssplay->psg_rconv = PSG_RateConv_new();
+
   for (i = 0; i < 2; i++) {
     for (j = 0; j < EDSC_MAX; j++) {
       kssplay->device_fir[i][j] = FIR_new();
@@ -247,6 +251,7 @@ KSSPLAY *KSSPLAY_new(uint32_t rate, uint32_t nch, uint32_t bps) {
     RCF_disable(kssplay->rcf[i]);
     kssplay->dcf[i] = DCF_new();
     DCF_reset(kssplay->dcf[i], rate);
+    // DCF_disable(kssplay->dcf[i]);
   }
 
   return kssplay;
@@ -255,14 +260,14 @@ KSSPLAY *KSSPLAY_new(uint32_t rate, uint32_t nch, uint32_t bps) {
 void KSSPLAY_set_device_quality(KSSPLAY *kssplay, uint32_t devnum, uint32_t quality) {
   switch (devnum) {
   case EDSC_PSG:
-    PSG_set_quality(kssplay->vm->psg, quality);
+    PSG_RateConv_setQuality(kssplay->psg_rconv, quality);
     SNG_set_quality(kssplay->vm->sng, quality);
     break;
   case EDSC_SCC:
     SCC_set_quality(kssplay->vm->scc, quality);
     break;
   case EDSC_OPLL:
-    OPLL_set_quality(kssplay->vm->opll, quality);
+    OPLL_setQuality(kssplay->vm->opll, quality);
     break;
   default:
     break;
@@ -304,6 +309,11 @@ void KSSPLAY_set_channel_pan(KSSPLAY *kssplay, uint32_t device, uint32_t ch, uin
 
 void KSSPLAY_set_device_pan(KSSPLAY *kssplay, uint32_t device, int32_t pan) { kssplay->device_pan[device] = pan; }
 
+void KSSPLAY_set_dcf(KSSPLAY *kssplay, int enable) {
+  kssplay->dcf[0]->enable = enable;
+  kssplay->dcf[1]->enable = enable;
+}
+
 void KSSPLAY_set_rcf(KSSPLAY *kssplay, uint32_t r, uint32_t c) {
   if (r != 0 && c != 0) {
     RCF_reset(kssplay->rcf[0], kssplay->rate, (double)r, (double)c / 1.0e9);
@@ -324,6 +334,8 @@ void KSSPLAY_delete(KSSPLAY *kssplay) {
 
   if (kssplay) {
     VM_delete(kssplay->vm);
+
+    PSG_RateConv_delete(kssplay->psg_rconv);
 
     for (i = 0; i < 2; i++) {
       for (j = 0; j < EDSC_MAX; j++) {
@@ -462,7 +474,7 @@ static inline void calc_per_ch(KSSPLAY *kssplay, KSSPLAY_PER_CH_OUT *out) {
       SNG_calc(kssplay->vm->sng);
       memcpy(out->sng, kssplay->vm->sng->ch_out, sizeof(out->sng));
     } else {
-      PSG_calc(kssplay->vm->psg);
+      PSG_RateConv_calc(kssplay->psg_rconv);
       memcpy(out->psg, kssplay->vm->psg->ch_out, sizeof(out->psg));
     }
   }
@@ -511,7 +523,7 @@ static inline void calc_mono(KSSPLAY *kssplay, int16_t *buf, uint32_t length) {
       if (kssplay->kss->sn76489) {
         d += apply_volume(FIR_calc(kssplay->device_fir[0][EDSC_PSG], SNG_calc(kssplay->vm->sng)), volume[EDSC_PSG]);
       } else {
-        d += apply_volume(FIR_calc(kssplay->device_fir[0][EDSC_PSG], PSG_calc(kssplay->vm->psg) + kssplay->vm->DA1),
+        d += apply_volume(FIR_calc(kssplay->device_fir[0][EDSC_PSG], PSG_RateConv_calc(kssplay->psg_rconv) + kssplay->vm->DA1),
                           volume[EDSC_PSG]);
       }
     }
@@ -580,7 +592,7 @@ static inline void calc_stereo(KSSPLAY *kssplay, int16_t *buf, uint32_t length) 
           ch[1] += apply_volume(c, volume[EDSC_PSG][1]);
         }
       } else {
-        c = FIR_calc(kssplay->device_fir[0][EDSC_PSG], PSG_calc(kssplay->vm->psg) + kssplay->vm->DA1);
+        c = FIR_calc(kssplay->device_fir[0][EDSC_PSG], PSG_RateConv_calc(kssplay->psg_rconv) + kssplay->vm->DA1);
         ch[0] += apply_volume(c, volume[EDSC_PSG][0]);
         ch[1] += apply_volume(c, volume[EDSC_PSG][1]);
       }

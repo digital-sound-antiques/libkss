@@ -180,6 +180,7 @@ VM *VM_new(int rate) {
 
   vm->sng = SNG_new(MSX_CLK, rate);
   vm->psg = PSG_new(MSX_CLK, rate);
+  PSG_setClockDivider(vm->psg, 1);
   vm->scc = SCC_new(MSX_CLK, rate);
   vm->opll = OPLL_new(MSX_CLK, rate);
   vm->opl = OPL_new(MSX_CLK, rate);
@@ -238,11 +239,11 @@ void VM_set_PSG_type(VM *vm, uint32_t psg_type) {
     return;
 
   if (psg_type == VM_PSG_AUTO)
-    PSG_setVolumeMode(vm->psg, EMU2149_VOL_DEFAULT);
+    PSG_setVolumeMode(vm->psg, 0);
   else if (psg_type == VM_PSG_AY)
-    PSG_setVolumeMode(vm->psg, EMU2149_VOL_AY_3_8910);
+    PSG_setVolumeMode(vm->psg, 2);
   else if (psg_type == VM_PSG_YM)
-    PSG_setVolumeMode(vm->psg, EMU2149_VOL_YM2149);
+    PSG_setVolumeMode(vm->psg, 1);
   vm->psg_type = psg_type;
 }
 
