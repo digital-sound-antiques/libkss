@@ -63,14 +63,14 @@ void update_psg_rate_quality(PSG_RateConv *conv) {
   if (conv->psg != NULL) {
     if (conv->quality != 0) {
       // high (sinc interporation)
-      PSG_setRate(conv->psg, conv->f_inp);
+      PSG_setRate(conv->psg, (uint32_t)conv->f_inp);
       PSG_setQuality(conv->psg, 0);
       // // mid (light-weight interporation)
       // PSG_setRate(conv->psg, conv->f_out);
       // PSG_setQuality(conv->psg, 1);
     } else {
       // low (no interporation)
-      PSG_setRate(conv->psg, conv->f_out);
+      PSG_setRate(conv->psg, (uint32_t)conv->f_out);
       PSG_setQuality(conv->psg, 0);
     }
   }
