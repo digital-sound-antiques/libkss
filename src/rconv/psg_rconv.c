@@ -157,7 +157,7 @@ void PSG_RateConv_delete(PSG_RateConv *conv) {
 }
 
 int16_t PSG_RateConv_calc(PSG_RateConv *conv) {
-  if (conv->quality == 0 || conv->quality == 1) {
+  if (conv->quality == 0) {
     return PSG_calc(conv->psg);
   }
   while (conv->f_inp > conv->out_time) {
