@@ -66,6 +66,7 @@ void update_psg_rate_quality(PSG_RateConv *conv) {
       // low (no interporation)
       PSG_setRate(conv->psg, (uint32_t)conv->f_out);
       PSG_setQuality(conv->psg, 0);
+      break;
     case 1:
       // mid (light-weight interporation)
       PSG_setRate(conv->psg, (uint32_t)conv->f_out);
