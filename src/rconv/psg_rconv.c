@@ -54,29 +54,42 @@ PSG_RateConv *PSG_RateConv_new(void) {
   conv->sinc_table = malloc(sizeof(conv->sinc_table[0]) * SINC_RESO * LW / 2);
   conv->psg = NULL;
   conv->f_ratio = 0;
-  conv->quality = 0;
+  conv->quality = 2;
 
   return conv;
 }
 
 void update_psg_rate_quality(PSG_RateConv *conv) {
   if (conv->psg != NULL) {
-    if (conv->quality != 0) {
-      // high (sinc interporation)
-      PSG_setRate(conv->psg, (uint32_t)conv->f_inp);
-      PSG_setQuality(conv->psg, 0);
-      // // mid (light-weight interporation)
-      // PSG_setRate(conv->psg, conv->f_out);
-      // PSG_setQuality(conv->psg, 1);
-    } else {
+    switch (conv->quality) {
+    case 0:
       // low (no interporation)
       PSG_setRate(conv->psg, (uint32_t)conv->f_out);
       PSG_setQuality(conv->psg, 0);
+    case 1:
+      // mid (light-weight interporation)
+      PSG_setRate(conv->psg, (uint32_t)conv->f_out);
+      PSG_setQuality(conv->psg, 1);
+      break;
+    case 2:
+    default:
+      // high (sinc interporation)
+      PSG_setQuality(conv->psg, 0);
+      PSG_setRate(conv->psg, (uint32_t)conv->f_inp);
+      break;
     }
   }
   reset(conv);
 }
 
+/**
+ * @brief Specify the rate conversion quality
+ *
+ * @param quality 
+ * - 0: low quality (no interporation, fastest)
+ * - 1: mid quality (mean interporation)
+ * - 2: best quality (sinc interporation, default)
+ */
 void PSG_RateConv_setQuality(PSG_RateConv *conv, uint8_t quality) {
   if (conv->quality != quality) {
     conv->quality = quality;
@@ -157,7 +170,7 @@ void PSG_RateConv_delete(PSG_RateConv *conv) {
 }
 
 int16_t PSG_RateConv_calc(PSG_RateConv *conv) {
-  if (conv->quality == 0) {
+  if (conv->quality < 2) {
     return PSG_calc(conv->psg);
   }
   while (conv->f_inp > conv->out_time) {

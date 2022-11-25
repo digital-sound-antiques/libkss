@@ -260,7 +260,7 @@ KSSPLAY *KSSPLAY_new(uint32_t rate, uint32_t nch, uint32_t bps) {
 void KSSPLAY_set_device_quality(KSSPLAY *kssplay, uint32_t devnum, uint32_t quality) {
   switch (devnum) {
   case EDSC_PSG:
-    PSG_RateConv_setQuality(kssplay->psg_rconv, quality);
+    PSG_RateConv_setQuality(kssplay->psg_rconv, quality > 0 ? 2 : 0);
     SNG_set_quality(kssplay->vm->sng, quality);
     break;
   case EDSC_SCC:

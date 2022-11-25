@@ -1,3 +1,6 @@
+# 1.1.4 (2022-11-26)
+- Update emu2149 to fix [issue 4](https://github.com/digital-sound-antiques/emu2149/issues/4).
+
 # 1.1.3 (2022-11-24)
 - Update emu2149 to fix [issue 3](https://github.com/digital-sound-antiques/emu2149/issues/3).
 
