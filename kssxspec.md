@@ -26,22 +26,26 @@ Later Mamiya extended the format for MSX-MUSIC, MSX-AUDIO, SEGA mk3 and GameGear
                   
                    if bit1 = '0', MSX mode
                      D76543210
-                      000XXR0F
-                         | ||+- bit0: Use FMPAC
-                         | |+-- bit1: 0 (SN76489 is disabled)
-                         | +--- bit2: Use RAM
-                         +----- bit3-4: 1: MSX-AUDIO
-                                        2: Majutushi D/A
-                                        3: MSX-AUDIO (STEREO)
+                      0V0XXR0F
+                       | | ||+- bit0: Use FMPAC
+                       | | |+-- bit1: 0 (SN76489 is disabled)
+                       | | +--- bit2: Use RAM
+                       | +----- bit3-4: 1: MSX-AUDIO
+                       |                2: Majutushi D/A
+                       |                3: MSX-AUDIO (STEREO)
+                       +------- bit6: 0: NTSC MODE
+                                      1: PAL MODE
 
                    if bit1 = '1', SEGA mode
                      D76543210
-                      0000RG1F
-                          |||+- bit0: Use FMUNIT
-                          ||+-- bit1: 1 (SN76489 is enabled)
-                          |+--- bit2: Use GG stereo
-                          +---- bit3: Use RAM
-                  
+                      0V00RG1F
+                       |  |||+- bit0: Use FMUNIT
+                       |  ||+-- bit1: 1 (SN76489 is enabled)
+                       |  |+--- bit2: Use GG stereo
+                       |  +---- bit3: Use RAM
+                       +------- bit6: 0: NTSC MODE
+                                      1: PAL MODE
+
 0010    m BYTES   extra header data (see the next section)
 0010+m  n BYTES   specified length initial data
 
