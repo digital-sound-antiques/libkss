@@ -147,7 +147,7 @@ static void scan_info(KSS *kss) {
     check_device(kss, kss->device_flag);
     kss->trk_min = 0;
     kss->trk_max = 255;
-    for (i = 0; i < EDSC_MAX; i++)
+    for (i = 0; i < KSS_DEVICE_MAX; i++)
       kss->vol[i] = 0x80;
   } else if (strncmp("KSSX", (const char *)(kss->data), 4) == 0) {
     kss->kssx = 1;
@@ -156,12 +156,12 @@ static void scan_info(KSS *kss) {
     if (kss->data[0x0E] < 0x10) {
       kss->trk_min = 0;
       kss->trk_max = 255;
-      for (i = 0; i < EDSC_MAX; i++)
+      for (i = 0; i < KSS_DEVICE_MAX; i++)
         kss->vol[i] = 0x80;
     } else {
       kss->trk_min = (kss->data[0x19] << 8) + kss->data[0x18];
       kss->trk_max = (kss->data[0x1B] << 8) + kss->data[0x1A];
-      for (i = 0; i < EDSC_MAX; i++)
+      for (i = 0; i < KSS_DEVICE_MAX; i++)
         kss->vol[i] = kss->data[0x1C + i];
 
       i = (kss->data[0x13] << 24) + (kss->data[0x12] << 16) + (kss->data[0x11] << 8) + kss->data[0x10] + 0x10 +

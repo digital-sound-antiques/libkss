@@ -7,13 +7,19 @@
 extern "C" {
 #endif
 
-enum EmuDeviceSerialCode {
+typedef enum tagKSS_DEVICE {
+  KSS_DEVICE_PSG = 0,
+  KSS_DEVICE_SCC = 1,
+  KSS_DEVICE_OPLL = 2,
+  KSS_DEVICE_OPL = 3,
+  KSS_DEVICE_MAX = 4,
+  /* for backward compatibility */
   EDSC_PSG = 0,
   EDSC_SCC = 1,
   EDSC_OPLL = 2,
   EDSC_OPL = 3,
   EDSC_MAX = 4,
-};
+} KSS_DEVICE;
 
 enum { KSS_16K = 0, KSS_8K = 1 };
 
@@ -65,7 +71,7 @@ typedef struct tagKSS {
   uint8_t device_flag;
   uint8_t trk_min;
   uint8_t trk_max;
-  uint8_t vol[EDSC_MAX];
+  uint8_t vol[KSS_DEVICE_MAX];
 
   uint16_t info_num;
   KSSINFO *info;

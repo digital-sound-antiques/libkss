@@ -84,12 +84,12 @@ int KSSPLAY_set_data(KSSPLAY *kssplay, KSS *kss) {
 
   if (kss->kssx && 0 < kss->extra_size) {
     header_size = 16 + kss->extra_size;
-    for (i = 0; i < EDSC_MAX; i++) {
+    for (i = 0; i < KSS_DEVICE_MAX; i++) {
       kssplay->device_volume[i] = (kss->vol[i] << (KSSPLAY_VOL_BITS - 8));
     }
   } else {
     header_size = 16;
-    for (i = 0; i < EDSC_MAX; i++) {
+    for (i = 0; i < KSS_DEVICE_MAX; i++) {
       kssplay->device_volume[i] = 0;
     }
   }
@@ -148,25 +148,25 @@ void KSSPLAY_set_speed(KSSPLAY *kssplay, uint32_t cpu_speed) {
   VM_set_clock(kssplay->vm, getclk(kssplay), kssplay->vsync_freq);
 }
 
-void KSSPLAY_set_device_type(KSSPLAY *kssplay, uint32_t devnum, uint32_t type) {
+void KSSPLAY_set_device_type(KSSPLAY *kssplay, KSS_DEVICE device, uint32_t type) {
   if (!kssplay->vm) {
     return;
   }
 
-  switch (devnum) {
-  case EDSC_PSG:
+  switch (device) {
+  case KSS_DEVICE_PSG:
     VM_set_PSG_type(kssplay->vm, type);
     break;
-  case EDSC_SCC:
+  case KSS_DEVICE_SCC:
     VM_set_SCC_type(kssplay->vm, type);
     break;
-  case EDSC_OPLL:
+  case KSS_DEVICE_OPLL:
     VM_set_OPLL_type(kssplay->vm, type);
     break;
   default:
     break;
   }
-  kssplay->device_type[devnum] = type;
+  kssplay->device_type[device] = type;
 }
 
 void KSSPLAY_reset(KSSPLAY *kssplay, uint32_t song, uint32_t cpu_speed) {
@@ -187,7 +187,7 @@ void KSSPLAY_reset(KSSPLAY *kssplay, uint32_t song, uint32_t cpu_speed) {
   VM_init_bank(kssplay->vm, kssplay->kss->bank_mode, kssplay->kss->bank_num, kssplay->kss->bank_offset,
                kssplay->bank_data);
 
-  for (i = 0; i < EDSC_MAX; i++) {
+  for (i = 0; i < KSS_DEVICE_MAX; i++) {
     KSSPLAY_set_device_type(kssplay, i, kssplay->device_type[i]);
   }
 
@@ -241,7 +241,7 @@ KSSPLAY *KSSPLAY_new(uint32_t rate, uint32_t nch, uint32_t bps) {
   kssplay->psg_rconv = PSG_RateConv_new();
 
   for (i = 0; i < 2; i++) {
-    for (j = 0; j < EDSC_MAX; j++) {
+    for (j = 0; j < KSS_DEVICE_MAX; j++) {
       kssplay->device_fir[i][j] = FIR_new();
       FIR_disable(kssplay->device_fir[i][j]);
     }
@@ -257,49 +257,52 @@ KSSPLAY *KSSPLAY_new(uint32_t rate, uint32_t nch, uint32_t bps) {
   return kssplay;
 }
 
-void KSSPLAY_set_device_quality(KSSPLAY *kssplay, uint32_t devnum, uint32_t quality) {
-  switch (devnum) {
-  case EDSC_PSG:
+void KSSPLAY_set_device_quality(KSSPLAY *kssplay, KSS_DEVICE device, uint32_t quality) {
+  switch (device) {
+  case KSS_DEVICE_PSG:
     PSG_RateConv_setQuality(kssplay->psg_rconv, quality > 0 ? 2 : 0);
     SNG_set_quality(kssplay->vm->sng, quality);
     break;
-  case EDSC_SCC:
+  case KSS_DEVICE_SCC:
     SCC_set_quality(kssplay->vm->scc, quality);
     break;
-  case EDSC_OPLL:
+  case KSS_DEVICE_OPLL:
     OPLL_setQuality(kssplay->vm->opll, quality);
+    break;
+  case KSS_DEVICE_OPL:
+    OPL_setQuality(kssplay->vm->opl, quality);
     break;
   default:
     break;
   }
 }
 
-void KSSPLAY_set_device_mute(KSSPLAY *kssplay, uint32_t devnum, uint32_t mute) {
-  if (devnum < EDSC_MAX) {
-    kssplay->device_mute[devnum] = mute;
+void KSSPLAY_set_device_mute(KSSPLAY *kssplay, KSS_DEVICE device, uint32_t mute) {
+  if (device < KSS_DEVICE_MAX) {
+    kssplay->device_mute[device] = mute;
   }
 }
 
-uint32_t KSSPLAY_get_device_volume(KSSPLAY *kssplay, uint32_t devnum) {
-  if (devnum < EDSC_MAX) {
-    return kssplay->device_volume[devnum];
+uint32_t KSSPLAY_get_device_volume(KSSPLAY *kssplay, KSS_DEVICE device) {
+  if (device < KSS_DEVICE_MAX) {
+    return kssplay->device_volume[device];
   } else {
     return 0;
   }
 }
 
-void KSSPLAY_set_device_volume(KSSPLAY *kssplay, uint32_t devnum, int32_t vol) {
-  if (devnum < EDSC_MAX) {
-    kssplay->device_volume[devnum] = vol;
+void KSSPLAY_set_device_volume(KSSPLAY *kssplay, KSS_DEVICE device, int32_t vol) {
+  if (device < KSS_DEVICE_MAX) {
+    kssplay->device_volume[device] = vol;
   }
 }
 void KSSPLAY_set_master_volume(KSSPLAY *kssplay, int32_t vol) { kssplay->master_volume = vol; }
 
-void KSSPLAY_set_channel_pan(KSSPLAY *kssplay, uint32_t device, uint32_t ch, uint32_t pan) {
+void KSSPLAY_set_channel_pan(KSSPLAY *kssplay, KSS_DEVICE device, uint32_t ch, uint32_t pan) {
   switch (device) {
-  case EDSC_OPLL:
+  case KSS_DEVICE_OPLL:
     if (kssplay->vm->opll) {
-      OPLL_set_pan(kssplay->vm->opll, ch, pan);
+      OPLL_setPan(kssplay->vm->opll, ch, pan);
     }
     break;
   default:
@@ -307,7 +310,11 @@ void KSSPLAY_set_channel_pan(KSSPLAY *kssplay, uint32_t device, uint32_t ch, uin
   }
 }
 
-void KSSPLAY_set_device_pan(KSSPLAY *kssplay, uint32_t device, int32_t pan) { kssplay->device_pan[device] = pan; }
+void KSSPLAY_set_device_pan(KSSPLAY *kssplay, KSS_DEVICE device, int32_t pan) {
+  if (device < KSS_DEVICE_MAX) {
+    kssplay->device_pan[device] = pan;
+  }
+}
 
 void KSSPLAY_set_dcf(KSSPLAY *kssplay, int enable) {
   kssplay->dcf[0]->enable = enable;
@@ -324,9 +331,11 @@ void KSSPLAY_set_rcf(KSSPLAY *kssplay, uint32_t r, uint32_t c) {
   }
 }
 
-void KSSPLAY_set_device_lpf(KSSPLAY *kssplay, uint32_t device, uint32_t cutoff) {
-  FIR_reset(kssplay->device_fir[0][device], kssplay->rate, cutoff, 31);
-  FIR_reset(kssplay->device_fir[1][device], kssplay->rate, cutoff, 31);
+void KSSPLAY_set_device_lpf(KSSPLAY *kssplay, KSS_DEVICE device, uint32_t cutoff) {
+  if (device < KSS_DEVICE_MAX) {
+    FIR_reset(kssplay->device_fir[0][device], kssplay->rate, cutoff, 31);
+    FIR_reset(kssplay->device_fir[1][device], kssplay->rate, cutoff, 31);
+  }
 }
 
 void KSSPLAY_delete(KSSPLAY *kssplay) {
@@ -338,7 +347,7 @@ void KSSPLAY_delete(KSSPLAY *kssplay) {
     PSG_RateConv_delete(kssplay->psg_rconv);
 
     for (i = 0; i < 2; i++) {
-      for (j = 0; j < EDSC_MAX; j++) {
+      for (j = 0; j < KSS_DEVICE_MAX; j++) {
         FIR_delete(kssplay->device_fir[i][j]);
       }
       RCF_delete(kssplay->rcf[i]);
@@ -459,17 +468,17 @@ static inline void calc_per_ch(KSSPLAY *kssplay, KSSPLAY_PER_CH_OUT *out) {
 
   memset(out, 0, sizeof(*out));
 
-  if (kssplay->kss->msx_audio && !kssplay->device_mute[EDSC_OPL]) {
+  if (kssplay->kss->msx_audio && !kssplay->device_mute[KSS_DEVICE_OPL]) {
     OPL_calc(kssplay->vm->opl);
     memcpy(out->opl, kssplay->vm->opl->ch_out, sizeof(out->opl));
   }
 
-  if (kssplay->kss->fmpac && !kssplay->device_mute[EDSC_OPLL]) {
+  if (kssplay->kss->fmpac && !kssplay->device_mute[KSS_DEVICE_OPLL]) {
     OPLL_calc(kssplay->vm->opll);
     memcpy(out->opll, kssplay->vm->opll->ch_out, sizeof(out->opll));
   }
 
-  if (!kssplay->device_mute[EDSC_PSG]) {
+  if (!kssplay->device_mute[KSS_DEVICE_PSG]) {
     if (kssplay->kss->sn76489) {
       SNG_calc(kssplay->vm->sng);
       memcpy(out->sng, kssplay->vm->sng->ch_out, sizeof(out->sng));
@@ -479,7 +488,7 @@ static inline void calc_per_ch(KSSPLAY *kssplay, KSSPLAY_PER_CH_OUT *out) {
     }
   }
 
-  if (!kssplay->device_mute[EDSC_SCC]) {
+  if (!kssplay->device_mute[KSS_DEVICE_SCC]) {
     SCC_calc(kssplay->vm->scc);
     memcpy(out->scc, kssplay->vm->scc->ch_out, sizeof(out->scc));
   }
@@ -500,37 +509,38 @@ void KSSPLAY_calc_per_ch(KSSPLAY *kssplay, KSSPLAY_PER_CH_OUT *out, uint32_t len
 static inline void calc_mono(KSSPLAY *kssplay, int16_t *buf, uint32_t length) {
   uint32_t i;
   int32_t d;
-  int32_t volume[EDSC_MAX];
+  int32_t volume[KSS_DEVICE_MAX];
 
-  for (i = 0; i < EDSC_MAX; i++) {
+  for (i = 0; i < KSS_DEVICE_MAX; i++) {
     volume[i] = clip(-256, kssplay->device_volume[i] + kssplay->master_volume, 255);
   }
 
   for (i = 0; i < length; i++) {
     process_vm(kssplay);
 
-    if (kssplay->kss->msx_audio && !kssplay->device_mute[EDSC_OPL]) {
-      d = apply_volume(FIR_calc(kssplay->device_fir[0][EDSC_OPL], OPL_calc(kssplay->vm->opl)), volume[EDSC_OPL]);
+    if (kssplay->kss->msx_audio && !kssplay->device_mute[KSS_DEVICE_OPL]) {
+      d = apply_volume(FIR_calc(kssplay->device_fir[0][KSS_DEVICE_OPL], OPL_calc(kssplay->vm->opl)), volume[KSS_DEVICE_OPL]);
     } else {
       d = 0;
     }
 
-    if (kssplay->kss->fmpac && !kssplay->device_mute[EDSC_OPLL]) {
-      d += apply_volume(FIR_calc(kssplay->device_fir[0][EDSC_OPLL], OPLL_calc(kssplay->vm->opll)), volume[EDSC_OPLL]);
+    if (kssplay->kss->fmpac && !kssplay->device_mute[KSS_DEVICE_OPLL]) {
+      d += apply_volume(FIR_calc(kssplay->device_fir[0][KSS_DEVICE_OPLL], OPLL_calc(kssplay->vm->opll)), volume[KSS_DEVICE_OPLL]);
     }
 
-    if (!kssplay->device_mute[EDSC_PSG]) {
+    if (!kssplay->device_mute[KSS_DEVICE_PSG]) {
       if (kssplay->kss->sn76489) {
-        d += apply_volume(FIR_calc(kssplay->device_fir[0][EDSC_PSG], SNG_calc(kssplay->vm->sng)), volume[EDSC_PSG]);
+        d += apply_volume(FIR_calc(kssplay->device_fir[0][KSS_DEVICE_PSG], SNG_calc(kssplay->vm->sng)), volume[KSS_DEVICE_PSG]);
       } else {
-        d += apply_volume(FIR_calc(kssplay->device_fir[0][EDSC_PSG], PSG_RateConv_calc(kssplay->psg_rconv) + kssplay->vm->DA1),
-                          volume[EDSC_PSG]);
+        d += apply_volume(
+            FIR_calc(kssplay->device_fir[0][KSS_DEVICE_PSG], PSG_RateConv_calc(kssplay->psg_rconv) + kssplay->vm->DA1),
+            volume[KSS_DEVICE_PSG]);
       }
     }
 
-    if (!kssplay->device_mute[EDSC_SCC]) {
-      d += apply_volume(FIR_calc(kssplay->device_fir[0][EDSC_SCC], SCC_calc(kssplay->vm->scc) + kssplay->vm->DA8),
-                        volume[EDSC_SCC]);
+    if (!kssplay->device_mute[KSS_DEVICE_SCC]) {
+      d += apply_volume(FIR_calc(kssplay->device_fir[0][KSS_DEVICE_SCC], SCC_calc(kssplay->vm->scc) + kssplay->vm->DA8),
+                        volume[KSS_DEVICE_SCC]);
     }
 
     /* Check silent span */
@@ -549,11 +559,11 @@ static inline void calc_mono(KSSPLAY *kssplay, int16_t *buf, uint32_t length) {
 static inline void calc_stereo(KSSPLAY *kssplay, int16_t *buf, uint32_t length) {
   uint32_t i;
   int32_t ch[2], b[2], c;
-  int32_t volume[EDSC_MAX][2];
+  int32_t volume[KSS_DEVICE_MAX][2];
 
 #define neg(x) ((x < 0) ? x : 0)
 
-  for (i = 0; i < EDSC_MAX; i++) {
+  for (i = 0; i < KSS_DEVICE_MAX; i++) {
     volume[i][0] = clip(-256, kssplay->device_volume[i] + kssplay->master_volume + neg(kssplay->device_pan[i]), 255);
     volume[i][1] = clip(-256, kssplay->device_volume[i] + kssplay->master_volume + neg(-kssplay->device_pan[i]), 255);
   }
@@ -561,47 +571,47 @@ static inline void calc_stereo(KSSPLAY *kssplay, int16_t *buf, uint32_t length) 
   for (i = 0; i < length; i++) {
     process_vm(kssplay);
 
-    if (kssplay->kss->msx_audio && !kssplay->device_mute[EDSC_OPL]) {
-      c = FIR_calc(kssplay->device_fir[0][EDSC_OPL], OPL_calc(kssplay->vm->opl));
-      ch[0] = apply_volume(c, volume[EDSC_OPL][0]);
-      ch[1] = apply_volume(c, volume[EDSC_OPL][1]);
+    if (kssplay->kss->msx_audio && !kssplay->device_mute[KSS_DEVICE_OPL]) {
+      c = FIR_calc(kssplay->device_fir[0][KSS_DEVICE_OPL], OPL_calc(kssplay->vm->opl));
+      ch[0] = apply_volume(c, volume[KSS_DEVICE_OPL][0]);
+      ch[1] = apply_volume(c, volume[KSS_DEVICE_OPL][1]);
     } else
       ch[0] = ch[1] = 0;
 
-    if (kssplay->kss->fmpac && !kssplay->device_mute[EDSC_OPLL]) {
+    if (kssplay->kss->fmpac && !kssplay->device_mute[KSS_DEVICE_OPLL]) {
       if (kssplay->opll_stereo) {
         OPLL_calc_stereo(kssplay->vm->opll, b);
-        ch[0] += apply_volume(FIR_calc(kssplay->device_fir[0][EDSC_OPLL], b[0]), volume[EDSC_OPLL][0]);
-        ch[1] += apply_volume(FIR_calc(kssplay->device_fir[1][EDSC_OPLL], b[1]), volume[EDSC_OPLL][1]);
+        ch[0] += apply_volume(FIR_calc(kssplay->device_fir[0][KSS_DEVICE_OPLL], b[0]), volume[KSS_DEVICE_OPLL][0]);
+        ch[1] += apply_volume(FIR_calc(kssplay->device_fir[1][KSS_DEVICE_OPLL], b[1]), volume[KSS_DEVICE_OPLL][1]);
       } else {
-        c = FIR_calc(kssplay->device_fir[0][EDSC_OPLL], OPLL_calc(kssplay->vm->opll));
-        ch[0] += apply_volume(c, volume[EDSC_OPLL][0]);
-        ch[1] += apply_volume(c, volume[EDSC_OPLL][1]);
+        c = FIR_calc(kssplay->device_fir[0][KSS_DEVICE_OPLL], OPLL_calc(kssplay->vm->opll));
+        ch[0] += apply_volume(c, volume[KSS_DEVICE_OPLL][0]);
+        ch[1] += apply_volume(c, volume[KSS_DEVICE_OPLL][1]);
       }
     }
 
-    if (!kssplay->device_mute[EDSC_PSG]) {
+    if (!kssplay->device_mute[KSS_DEVICE_PSG]) {
       if (kssplay->kss->sn76489) {
         if (kssplay->kss->stereo) {
           SNG_calc_stereo(kssplay->vm->sng, b);
-          ch[0] += apply_volume(FIR_calc(kssplay->device_fir[0][EDSC_PSG], b[0]), volume[EDSC_PSG][0]);
-          ch[1] += apply_volume(FIR_calc(kssplay->device_fir[1][EDSC_PSG], b[1]), volume[EDSC_PSG][1]);
+          ch[0] += apply_volume(FIR_calc(kssplay->device_fir[0][KSS_DEVICE_PSG], b[0]), volume[KSS_DEVICE_PSG][0]);
+          ch[1] += apply_volume(FIR_calc(kssplay->device_fir[1][KSS_DEVICE_PSG], b[1]), volume[KSS_DEVICE_PSG][1]);
         } else {
-          c = FIR_calc(kssplay->device_fir[0][EDSC_PSG], SNG_calc(kssplay->vm->sng));
-          ch[0] += apply_volume(c, volume[EDSC_PSG][0]);
-          ch[1] += apply_volume(c, volume[EDSC_PSG][1]);
+          c = FIR_calc(kssplay->device_fir[0][KSS_DEVICE_PSG], SNG_calc(kssplay->vm->sng));
+          ch[0] += apply_volume(c, volume[KSS_DEVICE_PSG][0]);
+          ch[1] += apply_volume(c, volume[KSS_DEVICE_PSG][1]);
         }
       } else {
-        c = FIR_calc(kssplay->device_fir[0][EDSC_PSG], PSG_RateConv_calc(kssplay->psg_rconv) + kssplay->vm->DA1);
-        ch[0] += apply_volume(c, volume[EDSC_PSG][0]);
-        ch[1] += apply_volume(c, volume[EDSC_PSG][1]);
+        c = FIR_calc(kssplay->device_fir[0][KSS_DEVICE_PSG], PSG_RateConv_calc(kssplay->psg_rconv) + kssplay->vm->DA1);
+        ch[0] += apply_volume(c, volume[KSS_DEVICE_PSG][0]);
+        ch[1] += apply_volume(c, volume[KSS_DEVICE_PSG][1]);
       }
     }
 
-    if (!kssplay->device_mute[EDSC_SCC]) {
-      c = FIR_calc(kssplay->device_fir[0][EDSC_SCC], SCC_calc(kssplay->vm->scc) + kssplay->vm->DA8);
-      ch[0] += apply_volume(c, volume[EDSC_SCC][0]);
-      ch[1] += apply_volume(c, volume[EDSC_SCC][1]);
+    if (!kssplay->device_mute[KSS_DEVICE_SCC]) {
+      c = FIR_calc(kssplay->device_fir[0][KSS_DEVICE_SCC], SCC_calc(kssplay->vm->scc) + kssplay->vm->DA8);
+      ch[0] += apply_volume(c, volume[KSS_DEVICE_SCC][0]);
+      ch[1] += apply_volume(c, volume[KSS_DEVICE_SCC][1]);
     }
 
     /* Check silent span */
@@ -673,22 +683,22 @@ void KSSPLAY_set_opll_patch(KSSPLAY *kssplay, uint8_t *data) {
 
 void KSSPLAY_set_channel_mask(KSSPLAY *kssplay, uint32_t device, uint32_t mask) {
   switch (device) {
-  case EDSC_PSG:
+  case KSS_DEVICE_PSG:
     if (kssplay->vm->psg) {
       PSG_setMask(kssplay->vm->psg, mask);
     }
     break;
-  case EDSC_SCC:
+  case KSS_DEVICE_SCC:
     if (kssplay->vm->scc) {
       SCC_setMask(kssplay->vm->scc, mask);
     }
     break;
-  case EDSC_OPLL:
+  case KSS_DEVICE_OPLL:
     if (kssplay->vm->opll) {
       OPLL_setMask(kssplay->vm->opll, mask);
     }
     break;
-  case EDSC_OPL:
+  case KSS_DEVICE_OPL:
     if (kssplay->vm->opl) {
       OPL_setMask(kssplay->vm->opl, mask);
     }
@@ -721,4 +731,24 @@ uint8_t KSSPLAY_get_MGS_jump_count(KSSPLAY *kssplay) {
     return MMAP_read_memory(kssplay->vm->mmap, adr + 6);
   }
   return 0;
+}
+
+int KSSPLAY_read_device_regs(KSSPLAY *kssplay, KSS_DEVICE device, uint8_t *buf) {
+  switch(device) {
+    case KSS_DEVICE_PSG:
+      memcpy(buf, kssplay->vm->psg->reg, 16);
+      return 16;
+    case KSS_DEVICE_SCC:
+      memcpy(buf, kssplay->vm->scc->wave, 5 * 32);
+      memcpy(buf + 0xc0, kssplay->vm->scc->reg, 64);
+      return 256;
+    case KSS_DEVICE_OPLL:
+      memcpy(buf, kssplay->vm->opll->reg, 64);
+      return 64;
+    case KSS_DEVICE_OPL:
+      memcpy(buf, kssplay->vm->opl->reg, 256);
+      return 256;
+    default:
+      return 0;
+  }  
 }
