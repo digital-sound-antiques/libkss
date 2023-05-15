@@ -198,7 +198,7 @@ void KSSPLAY_reset(KSSPLAY *kssplay, uint32_t song, uint32_t cpu_speed) {
   kssplay->fade = 0;
   kssplay->fade_flag = 0;
 
-  kssplay->step_inc = kssplay->vm->clock / kssplay->rate;
+  kssplay->step_inc = (double)kssplay->vm->clock / kssplay->rate;
   kssplay->step_cnt = 0;
   kssplay->decoded_length = 0;
   kssplay->silent = 0;
