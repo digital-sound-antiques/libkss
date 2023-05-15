@@ -456,9 +456,12 @@ static inline void fade_per_ch(KSSPLAY *kssplay, KSSPLAY_PER_CH_OUT *out) {
 static inline void process_vm(KSSPLAY *kssplay) {
   int step_int = (int)kssplay->step_cnt;
   kssplay->step_cnt += kssplay->step_inc;
-  if (step_int > 1) {
+  if (step_int > 0) {
     kssplay->step_cnt -= step_int;
-    VM_exec(kssplay->vm, step_int);
+    //VM_exec might execute more than step_int cycles
+    uint32_t extra_cycles = VM_exec(kssplay->vm, step_int) - step_int;
+    //correct the step_cnt for the extra cycles
+    kssplay->step_cnt -= extra_cycles;
   }
 }
 
