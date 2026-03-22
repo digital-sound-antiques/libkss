@@ -62,6 +62,11 @@ struct tagKSSPLAY {
   int opll_stereo;
 
   PSG_RateConv *psg_rconv;
+
+  int32_t psg_ch_pan[3];  /* per-channel PSG panning (-128..128), 0 = center */
+  int32_t scc_ch_pan[5];  /* per-channel SCC panning (-128..128), 0 = center */
+  uint8_t psg_per_ch_pan; /* enable per-channel PSG panning */
+  uint8_t scc_per_ch_pan; /* enable per-channel SCC panning */
 };
 
 /**

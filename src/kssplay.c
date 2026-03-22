@@ -604,6 +604,22 @@ static inline void calc_stereo(KSSPLAY *kssplay, int16_t *buf, uint32_t length) 
           ch[0] += apply_volume(c, volume[KSS_DEVICE_PSG][0]);
           ch[1] += apply_volume(c, volume[KSS_DEVICE_PSG][1]);
         }
+      } else if (kssplay->psg_per_ch_pan) {
+        PSG_RateConv_calc(kssplay->psg_rconv);
+        {
+          int k;
+          PSG *psg = kssplay->vm->psg;
+          for (k = 0; k < 3; k++) {
+            int32_t val = psg->ch_out[k];
+            int32_t pan = kssplay->psg_ch_pan[k];
+            int32_t vl = clip(-256, kssplay->device_volume[KSS_DEVICE_PSG] + kssplay->master_volume + neg(pan), 255);
+            int32_t vr = clip(-256, kssplay->device_volume[KSS_DEVICE_PSG] + kssplay->master_volume + neg(-pan), 255);
+            ch[0] += apply_volume(val, vl);
+            ch[1] += apply_volume(val, vr);
+          }
+          ch[0] += apply_volume(kssplay->vm->DA1, volume[KSS_DEVICE_PSG][0]);
+          ch[1] += apply_volume(kssplay->vm->DA1, volume[KSS_DEVICE_PSG][1]);
+        }
       } else {
         c = FIR_calc(kssplay->device_fir[0][KSS_DEVICE_PSG], PSG_RateConv_calc(kssplay->psg_rconv) + kssplay->vm->DA1);
         ch[0] += apply_volume(c, volume[KSS_DEVICE_PSG][0]);
@@ -612,9 +628,27 @@ static inline void calc_stereo(KSSPLAY *kssplay, int16_t *buf, uint32_t length) 
     }
 
     if (!kssplay->device_mute[KSS_DEVICE_SCC]) {
-      c = FIR_calc(kssplay->device_fir[0][KSS_DEVICE_SCC], SCC_calc(kssplay->vm->scc) + kssplay->vm->DA8);
-      ch[0] += apply_volume(c, volume[KSS_DEVICE_SCC][0]);
-      ch[1] += apply_volume(c, volume[KSS_DEVICE_SCC][1]);
+      if (kssplay->scc_per_ch_pan) {
+        SCC_calc(kssplay->vm->scc);
+        {
+          int k;
+          SCC *scc = kssplay->vm->scc;
+          for (k = 0; k < 5; k++) {
+            int32_t val = scc->ch_out[k];
+            int32_t pan = kssplay->scc_ch_pan[k];
+            int32_t vl = clip(-256, kssplay->device_volume[KSS_DEVICE_SCC] + kssplay->master_volume + neg(pan), 255);
+            int32_t vr = clip(-256, kssplay->device_volume[KSS_DEVICE_SCC] + kssplay->master_volume + neg(-pan), 255);
+            ch[0] += apply_volume(val, vl);
+            ch[1] += apply_volume(val, vr);
+          }
+          ch[0] += apply_volume(kssplay->vm->DA8, volume[KSS_DEVICE_SCC][0]);
+          ch[1] += apply_volume(kssplay->vm->DA8, volume[KSS_DEVICE_SCC][1]);
+        }
+      } else {
+        c = FIR_calc(kssplay->device_fir[0][KSS_DEVICE_SCC], SCC_calc(kssplay->vm->scc) + kssplay->vm->DA8);
+        ch[0] += apply_volume(c, volume[KSS_DEVICE_SCC][0]);
+        ch[1] += apply_volume(c, volume[KSS_DEVICE_SCC][1]);
+      }
     }
 
     /* Check silent span */
