@@ -83,7 +83,7 @@ void KSS_delete(KSS *kss);
 
 const char *KSS_get_title(KSS *kss);
 
-enum { KSSDATA, MGSDATA, MBMDATA, MPK106DATA, MPK103DATA, BGMDATA, OPXDATA, FMDATA, KSS_TYPE_UNKNOWN };
+enum { KSSDATA, MGSDATA, MBMDATA, MPK106DATA, MPK103DATA, BGMDATA, OPXDATA, SNGDATA, FMDATA, KSS_TYPE_UNKNOWN };
 
 int KSS_check_type(uint8_t *data, uint32_t size, const char *filename);
 
@@ -106,6 +106,7 @@ void KSS_get_info_mgsdata(KSS *, uint8_t *data, uint32_t size);
 void KSS_get_info_bgmdata(KSS *, uint8_t *data, uint32_t size);
 void KSS_get_info_mpkdata(KSS *, uint8_t *data, uint32_t size);
 void KSS_get_info_opxdata(KSS *, uint8_t *data, uint32_t size);
+void KSS_get_info_sngdata(KSS *, uint8_t *data, uint32_t size);
 void KSS_get_info_kssdata(KSS *, uint8_t *data, uint32_t size);
 void KSS_get_info_mbmdata(KSS *, uint8_t *data, uint32_t size);
 
@@ -114,6 +115,7 @@ void KSS_make_header(uint8_t *header, uint16_t load_adr, uint16_t load_size, uin
 KSS *KSS_mgs2kss(uint8_t *data, uint32_t size);
 KSS *KSS_bgm2kss(uint8_t *data, uint32_t size);
 KSS *KSS_opx2kss(uint8_t *data, uint32_t size);
+KSS *KSS_sng2kss(uint8_t *data, uint32_t size);
 KSS *KSS_mpk1032kss(uint8_t *data, uint32_t size);
 KSS *KSS_mpk1062kss(uint8_t *data, uint32_t size);
 KSS *KSS_kss2kss(uint8_t *data, uint32_t size);
@@ -128,6 +130,7 @@ int KSS_isBGMdata(uint8_t *data, uint32_t size);
 int KSS_isMPK106data(uint8_t *data, uint32_t size);
 int KSS_isMPK103data(uint8_t *data, uint32_t size);
 int KSS_isOPXdata(uint8_t *data, uint32_t size);
+int KSS_isSNGdata(uint8_t *data, uint32_t size);
 
 KSS *KSS_load_file(char *fn);
 

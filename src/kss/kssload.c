@@ -227,6 +227,9 @@ KSS *KSS_load_file(char *fn) {
 #ifdef KSS_ZIP_SUPPORT
   if (length >= 0x1e && strncmp(read_buf, "PK\x03\x04", 4) == 0) {
     if ((inf_buf = zip_extract("KSS", read_buf, length, &size_inf)) == NULL) {
+      inf_buf = zip_extract("SNG", read_buf, length, &size_inf);
+    }
+    if (inf_buf == NULL) {
       free(read_buf);
       return NULL;
     }

@@ -59,6 +59,8 @@ int KSS_check_type(uint8_t *data, uint32_t size, const char *filename) {
     return OPXDATA;
   else if (KSS_isBGMdata(data, size))
     return BGMDATA;
+  else if (KSS_isSNGdata(data, size))
+    return SNGDATA;
   else if (filename) {
     p = strrchr(filename, '.');
     if (p && (strcmp(p, ".MBM") == 0 || strcmp(p, ".mbm") == 0))
@@ -253,6 +255,12 @@ KSS *KSS_bin2kss(uint8_t *data, uint32_t data_size, const char *filename) {
     kss = KSS_bgm2kss(data, data_size);
     if (kss)
       KSS_get_info_bgmdata(kss, data, data_size);
+    break;
+
+  case SNGDATA:
+    kss = KSS_sng2kss(data, data_size);
+    if (kss)
+      KSS_get_info_sngdata(kss, data, data_size);
     break;
 
   case MPK103DATA:
