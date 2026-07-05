@@ -23,6 +23,7 @@ extern "C" {
 #define KSSPLAY_VOL_MASK ((1 << KSSPLAY_VOL_BITS) - 1)
 
 typedef struct tagKSSPLAY KSSPLAY;
+typedef struct tagKSSPLAY_SNG KSSPLAY_SNG;
 struct tagKSSPLAY {
   KSS *kss;
 
@@ -62,6 +63,7 @@ struct tagKSSPLAY {
   int opll_stereo;
 
   PSG_RateConv *psg_rconv;
+  KSSPLAY_SNG *sngplay;
 
   int32_t psg_ch_pan[3];  /* per-channel PSG panning (-128..128), 0 = center */
   int32_t scc_ch_pan[5];  /* per-channel SCC panning (-128..128), 0 = center */

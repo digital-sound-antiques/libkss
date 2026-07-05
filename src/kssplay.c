@@ -2,6 +2,7 @@
  * 2004-05-23 : Patched for GG Stereo by RuRuRu
  */
 #include "kssplay.h"
+#include "kssplay_sng.h"
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
@@ -81,6 +82,16 @@ static inline int32_t apply_volume(int32_t data, int32_t vol) {
 int KSSPLAY_set_data(KSSPLAY *kssplay, KSS *kss) {
   uint32_t logical_size, header_size;
   int i;
+
+  if (kss->type == SNGDATA) {
+    kssplay->kss = kss;
+    kssplay->main_data = kss->data;
+    kssplay->bank_data = NULL;
+    for (i = 0; i < KSS_DEVICE_MAX; i++) {
+      kssplay->device_volume[i] = 0;
+    }
+    return 0;
+  }
 
   if (kss->kssx && 0 < kss->extra_size) {
     header_size = 16 + kss->extra_size;
@@ -180,6 +191,15 @@ void KSSPLAY_reset(KSSPLAY *kssplay, uint32_t song, uint32_t cpu_speed) {
 
   if (kssplay->vsync_freq == 0) {
     kssplay->vsync_freq = kssplay->kss->pal_mode ? PAL_FREQ : NTSC_FREQ;
+  }
+
+  if (kssplay->kss->type == SNGDATA) {
+    KSSPLAY_SNG_reset(kssplay);
+    kssplay->fade = 0;
+    kssplay->fade_flag = 0;
+    kssplay->decoded_length = 0;
+    kssplay->silent = 0;
+    return;
   }
 
   VM_init_memory(kssplay->vm, kssplay->kss->ram_mode, kssplay->kss->load_adr, kssplay->kss->load_len,
@@ -353,6 +373,7 @@ void KSSPLAY_delete(KSSPLAY *kssplay) {
       RCF_delete(kssplay->rcf[i]);
       DCF_delete(kssplay->dcf[i]);
     }
+    KSSPLAY_SNG_delete(kssplay);
     free(kssplay);
   }
 }
@@ -466,6 +487,17 @@ static inline void process_vm(KSSPLAY *kssplay) {
 }
 
 static inline void calc_per_ch(KSSPLAY *kssplay, KSSPLAY_PER_CH_OUT *out) {
+
+  if (kssplay->kss->type == SNGDATA) {
+    KSSPLAY_SNG_process(kssplay);
+    memset(out, 0, sizeof(*out));
+    if (!kssplay->device_mute[KSS_DEVICE_SCC]) {
+      SCC_calc(kssplay->vm->scc);
+      memcpy(out->scc, kssplay->vm->scc->ch_out, sizeof(out->scc));
+    }
+    fade_per_ch(kssplay, out);
+    return;
+  }
 
   process_vm(kssplay);
 
@@ -667,7 +699,66 @@ static inline void calc_stereo(KSSPLAY *kssplay, int16_t *buf, uint32_t length) 
   }
 }
 
+static inline void calc_sng_mono(KSSPLAY *kssplay, int16_t *buf, uint32_t length) {
+  uint32_t i;
+  int32_t d;
+  int32_t volume = clip(-256, kssplay->device_volume[KSS_DEVICE_SCC] + kssplay->master_volume, 255);
+  for (i = 0; i < length; i++) {
+    KSSPLAY_SNG_process(kssplay);
+    if (!kssplay->device_mute[KSS_DEVICE_SCC]) {
+      d = apply_volume(FIR_calc(kssplay->device_fir[0][KSS_DEVICE_SCC], SCC_calc(kssplay->vm->scc)), volume);
+    } else {
+      d = 0;
+    }
+    if (kssplay->lastout[0] == (uint32_t)d) {
+      kssplay->silent++;
+    } else {
+      kssplay->lastout[0] = d;
+      kssplay->silent = 0;
+    }
+    d = fader(kssplay, DCF_calc(kssplay->dcf[0], d));
+    buf[i] = compress(RCF_calc(kssplay->rcf[0], d));
+  }
+}
+
+static inline void calc_sng_stereo(KSSPLAY *kssplay, int16_t *buf, uint32_t length) {
+  uint32_t i;
+  int32_t ch[2], c;
+  int32_t vl = clip(-256, kssplay->device_volume[KSS_DEVICE_SCC] + kssplay->master_volume + neg(kssplay->device_pan[KSS_DEVICE_SCC]), 255);
+  int32_t vr = clip(-256, kssplay->device_volume[KSS_DEVICE_SCC] + kssplay->master_volume + neg(-kssplay->device_pan[KSS_DEVICE_SCC]), 255);
+  for (i = 0; i < length; i++) {
+    KSSPLAY_SNG_process(kssplay);
+    if (!kssplay->device_mute[KSS_DEVICE_SCC]) {
+      c = SCC_calc(kssplay->vm->scc);
+      ch[0] = apply_volume(FIR_calc(kssplay->device_fir[0][KSS_DEVICE_SCC], c), vl);
+      ch[1] = apply_volume(FIR_calc(kssplay->device_fir[1][KSS_DEVICE_SCC], c), vr);
+    } else {
+      ch[0] = ch[1] = 0;
+    }
+    if (kssplay->lastout[0] == (uint32_t)ch[0] && kssplay->lastout[1] == (uint32_t)ch[1]) {
+      kssplay->silent++;
+    } else {
+      kssplay->lastout[0] = ch[0];
+      kssplay->lastout[1] = ch[1];
+      kssplay->silent = 0;
+    }
+    ch[0] = fader(kssplay, DCF_calc(kssplay->dcf[0], ch[0]));
+    ch[1] = fader(kssplay, DCF_calc(kssplay->dcf[1], ch[1]));
+    buf[(i << 1)] = compress(RCF_calc(kssplay->rcf[0], ch[0]));
+    buf[(i << 1) + 1] = compress(RCF_calc(kssplay->rcf[1], ch[1]));
+  }
+}
+
 void KSSPLAY_calc(KSSPLAY *kssplay, int16_t *buf, uint32_t length) {
+  if (kssplay->kss->type == SNGDATA) {
+    if (kssplay->nch == 1) {
+      calc_sng_mono(kssplay, buf, length);
+    } else {
+      calc_sng_stereo(kssplay, buf, length);
+    }
+    kssplay->decoded_length += length;
+    return;
+  }
   if (kssplay->nch == 1) {
     calc_mono(kssplay, buf, length);
   } else {
@@ -680,11 +771,19 @@ void KSSPLAY_calc(KSSPLAY *kssplay, int16_t *buf, uint32_t length) {
 
 void KSSPLAY_calc_silent(KSSPLAY *kssplay, uint32_t length) {
   uint32_t i;
-  for (i = 0; i < length; i++) {
-    process_vm(kssplay);
+  if (kssplay->kss->type == SNGDATA) {
+    for (i = 0; i < length; i++) {
+      KSSPLAY_SNG_process(kssplay);
+    }
+  } else {
+    for (i = 0; i < length; i++) {
+      process_vm(kssplay);
+    }
   }
   kssplay->decoded_length += length;
-  LPDETECT_update(kssplay->vm->lpde, kssplay->decoded_length * 1000 / kssplay->rate, 30 * 1000, 1000);
+  if (kssplay->kss->type != SNGDATA) {
+    LPDETECT_update(kssplay->vm->lpde, kssplay->decoded_length * 1000 / kssplay->rate, 30 * 1000, 1000);
+  }
 
   if (KSSPLAY_get_fade_flag(kssplay) == KSSPLAY_FADE_OUT) {
     if (kssplay->fade > kssplay->fade_step * length) {
