@@ -23,6 +23,23 @@ You can also build the KSS to WAV converter example as follows.
 $ cmake --build . --target kss2wav
 ```
 
+# Build with Docker
+You can build and try libkss on Ubuntu using the provided `Dockerfile`, without installing a toolchain on your host. The submodules must be checked out first.
+
+```
+$ git clone --recursive https://github.com/digital-sound-antiques/libkss.git
+$ cd libkss
+$ docker build -t libkss .
+```
+
+This builds `libkss.a` and the `kss2wav` example inside the image (under `/src/build`).
+
+To run the `kss2wav` converter, mount a directory containing your `.kss` files:
+
+```
+$ docker run --rm -v "$PWD:/data" libkss ./build/kss2wav /data/song.kss
+```
+
 # Note
 The [kss-drivers] submodule on which libkss depends, does NOT follow the libkss's license.
 See README of the submodule.
