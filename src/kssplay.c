@@ -211,6 +211,46 @@ void KSSPLAY_reset(KSSPLAY *kssplay, uint32_t song, uint32_t cpu_speed) {
   PSG_RateConv_reset(kssplay->psg_rconv, kssplay->vm->psg, kssplay->rate);
 }
 
+/* Dynamic playback fields carried by a saved state, in a single list so save and
+   load always stay in the same order. Host configuration (volume, mute, pan,
+   device type, filters, rate/nch/bps) is intentionally excluded so a load keeps
+   the current settings rather than reverting them. */
+#define KSSPLAY_STATE_FIELDS(X) \
+  X(step_cnt) X(step_inc) X(fade) X(fade_step) X(fade_flag) X(silent) X(decoded_length) X(lastout)
+
+int KSSPLAY_save_state(KSSPLAY *kssplay, uint8_t *out) {
+  int n = 0;
+#define X(f)                                                    \
+  do {                                                          \
+    if (out) memcpy(out + n, &kssplay->f, sizeof(kssplay->f));  \
+    n += (int)sizeof(kssplay->f);                               \
+  } while (0);
+  KSSPLAY_STATE_FIELDS(X)
+#undef X
+  /* the VM (CPU, sound chips and RAM) is the bulk of the state */
+  n += VM_save_state(kssplay->vm, out ? out + n : (uint8_t *)0);
+  return n;
+}
+
+void KSSPLAY_load_state(KSSPLAY *kssplay, const uint8_t *in, int size) {
+  int n = 0;
+#define X(f)                                                    \
+  do {                                                          \
+    if (n + (int)sizeof(kssplay->f) > size) return;             \
+    memcpy(&kssplay->f, in + n, sizeof(kssplay->f));            \
+    n += (int)sizeof(kssplay->f);                               \
+  } while (0);
+  KSSPLAY_STATE_FIELDS(X)
+#undef X
+  VM_load_state(kssplay->vm, in + n, size - n);
+  /* The output resamplers/filters keep their live state, so resuming playback
+     from the point the state was saved is seamless. Per-channel chip masks live
+     in the VM state and revert here; re-apply them via KSSPLAY_set_channel_mask
+     if the caller needs them preserved across a load. */
+}
+
+#undef KSSPLAY_STATE_FIELDS
+
 KSSPLAY *KSSPLAY_new(uint32_t rate, uint32_t nch, uint32_t bps) {
   KSSPLAY *kssplay;
   int i, j;
