@@ -91,6 +91,14 @@ uint32_t MMAP_read_memory(MMAP *mmap, uint32_t adr);
 */
 void MMAP_write_memory(MMAP *mmap, uint32_t adr, uint32_t val);
 
+/* Save/restore the writable (RAM) bank contents plus the current page->bank
+   mapping. The bank topology itself (which banks exist, their bodies and
+   read-only ROM data) is NOT serialised — it must already be set up identically
+   (same instance, or one reloaded the same way) before a load. out=NULL returns
+   the required size. */
+int MMAP_save_state(MMAP *mmap, uint8_t *out);
+void MMAP_load_state(MMAP *mmap, const uint8_t *in, int size);
+
 #ifdef __cplusplus
 }
 #endif

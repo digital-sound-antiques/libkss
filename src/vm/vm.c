@@ -387,3 +387,82 @@ void VM_write_memory(VM *vm, uint32_t a, uint32_t d) {
 void VM_write_io(VM *vm, uint32_t a, uint32_t d) {
   iowrite(vm, a, d);
 }
+
+/* Serialise every sound chip in a fixed order. `n` is advanced; when out is NULL
+   only the size is accumulated. */
+static int save_chips(VM *vm, uint8_t *out, int n) {
+  if (vm->sng) n += SNG_save_state(vm->sng, out ? out + n : (uint8_t *)0);
+  if (vm->psg) n += PSG_save_state(vm->psg, out ? out + n : (uint8_t *)0);
+  if (vm->scc) n += SCC_save_state(vm->scc, out ? out + n : (uint8_t *)0);
+  if (vm->opll) n += OPLL_save_state(vm->opll, out ? out + n : (uint8_t *)0);
+  if (vm->opl) n += OPL_save_state(vm->opl, out ? out + n : (uint8_t *)0);
+  return n;
+}
+
+int VM_save_state(VM *vm, uint8_t *out) {
+  int n = 0;
+  /* whole VM struct: Z80 context + event timer (both embedded), I/O map, scalars, D/A */
+  if (out) memcpy(out + n, vm, sizeof(VM));
+  n += (int)sizeof(VM);
+  n = save_chips(vm, out, n);
+  n += MMAP_save_state(vm->mmap, out ? out + n : (uint8_t *)0);
+  return n;
+}
+
+void VM_load_state(VM *vm, const uint8_t *in, int size) {
+  int n = 0;
+  /* this instance's own allocations / host bindings, kept across the struct copy
+     so the restored state carries no pointer into whatever instance produced it */
+  MMAP *mmap = vm->mmap;
+  LPDETECT *lpde = vm->lpde;
+  SNG *sng = vm->sng;
+  PSG *psg = vm->psg;
+  SCC *scc = vm->scc;
+  OPLL *opll = vm->opll;
+  OPL *opl = vm->opl;
+  void *fp = vm->fp;
+  void *iowctx = vm->iowrite_handler_context, *mewctx = vm->memwrite_handler_context;
+  void (*iowh)(void *, uint32_t, uint32_t) = vm->iowrite_handler;
+  void (*mewh)(void *, uint32_t, uint32_t) = vm->memwrite_handler;
+
+  if (size < (int)sizeof(VM)) return;
+  memcpy(vm, in, sizeof(VM));
+  n += (int)sizeof(VM);
+
+  vm->mmap = mmap;
+  vm->lpde = lpde;
+  vm->sng = sng;
+  vm->psg = psg;
+  vm->scc = scc;
+  vm->opll = opll;
+  vm->opl = opl;
+  vm->fp = fp;
+  vm->iowrite_handler = iowh;
+  vm->iowrite_handler_context = iowctx;
+  vm->memwrite_handler = mewh;
+  vm->memwrite_handler_context = mewctx;
+
+  /* Re-bind the CPU context to THIS instance. The opcode tables and sysmem
+     callbacks copied in are process-global (static), so they stay valid; only
+     the per-instance user pointer, host callbacks and event timer are re-set. */
+  vm->context.user = vm;
+  vm->context.memread = (void *)memread;
+  vm->context.memwrite = (void *)memwrite;
+  vm->context.ioread = (void *)ioread;
+  vm->context.iowrite = (void *)iowrite;
+  vm->context.busread = (void *)busread;
+  vm->context.kmevent = &vm->kme;
+  /* restored kme keeps the event's timer/links; only re-point its proc + user */
+  kmevent_setevent(&vm->kme, vm->vsync_id, vsync, vm);
+
+  if (vm->sng) { SNG_load_state(vm->sng, in + n, size - n); n += SNG_save_state(vm->sng, (uint8_t *)0); }
+  if (vm->psg) { PSG_load_state(vm->psg, in + n, size - n); n += PSG_save_state(vm->psg, (uint8_t *)0); }
+  if (vm->scc) { SCC_load_state(vm->scc, in + n, size - n); n += SCC_save_state(vm->scc, (uint8_t *)0); }
+  if (vm->opll) { OPLL_load_state(vm->opll, in + n, size - n); n += OPLL_save_state(vm->opll, (uint8_t *)0); }
+  if (vm->opl) { OPL_load_state(vm->opl, in + n, size - n); n += OPL_save_state(vm->opl, (uint8_t *)0); }
+
+  MMAP_load_state(vm->mmap, in + n, size - n);
+
+  /* loop detection tracks write history; drop it so a rewind can't false-trigger */
+  LPDETECT_reset(vm->lpde);
+}
