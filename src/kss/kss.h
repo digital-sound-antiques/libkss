@@ -78,11 +78,6 @@ typedef struct tagKSS {
 
 } KSS;
 
-typedef struct {
-  uint8_t type;
-  uint32_t offset;
-} KSS_TYPE_INFO;
-
 KSS *KSS_new(uint8_t *data, uint32_t size);
 void KSS_delete(KSS *kss);
 
@@ -90,7 +85,7 @@ const char *KSS_get_title(KSS *kss);
 
 enum { KSSDATA, MGSDATA, MBMDATA, MPK106DATA, MPK103DATA, BGMDATA, OPXDATA, FMDATA, KSS_TYPE_UNKNOWN };
 
-KSS_TYPE_INFO KSS_check_type(uint8_t *data, uint32_t size, const char *filename);
+int KSS_check_type(uint8_t *data, uint32_t size, const char *filename);
 
 int KSS_load_mgsdrv(const char *filename);
 int KSS_set_mgsdrv(const uint8_t *data, uint32_t size);

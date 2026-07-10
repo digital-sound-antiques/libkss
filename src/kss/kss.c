@@ -39,36 +39,33 @@ void KSS_delete(KSS *kss) {
   }
 }
 
-KSS_TYPE_INFO KSS_check_type(uint8_t *data, uint32_t size, const char *filename) {
+int KSS_check_type(uint8_t *data, uint32_t size, const char *filename) {
   char *p;
 
   if (size < 0x4)
-    return (KSS_TYPE_INFO){.type = KSSDATA, .offset = 0};
+    return KSSDATA;
 
   if (KSS_isMGSdata(data, size))
-    return (KSS_TYPE_INFO){.type = MGSDATA, .offset = 0};
-  if (KSS_isMPK106data(data, size))
-    return (KSS_TYPE_INFO){.type = MPK106DATA, .offset = 0};
-  if (KSS_isMPK103data(data, size))
-    return (KSS_TYPE_INFO){.type = MPK103DATA, .offset = 0};
-  if (!strncmp("KSCC", (const char *)data, 4))
-    return (KSS_TYPE_INFO){.type = KSSDATA, .offset = 0};
-  if (!strncmp("KSSX", (const char *)data, 4))
-    return (KSS_TYPE_INFO){.type = KSSDATA, .offset = 0};
-
-  const int offset = KSS_isOPXdata(data, size);
-
-  if (offset >= 0)
-    return (KSS_TYPE_INFO){.type = OPXDATA, .offset = offset};
-  if (KSS_isBGMdata(data, size))
-    return (KSS_TYPE_INFO){.type = BGMDATA, .offset = 0};
-  if (filename) {
+    return MGSDATA;
+  else if (KSS_isMPK106data(data, size))
+    return MPK106DATA;
+  else if (KSS_isMPK103data(data, size))
+    return MPK103DATA;
+  else if (!strncmp("KSCC", (const char *)data, 4))
+    return KSSDATA;
+  else if (!strncmp("KSSX", (const char *)data, 4))
+    return KSSDATA;
+  else if (KSS_isOPXdata(data, size))
+    return OPXDATA;
+  else if (KSS_isBGMdata(data, size))
+    return BGMDATA;
+  else if (filename) {
     p = strrchr(filename, '.');
     if (p && (strcmp(p, ".MBM") == 0 || strcmp(p, ".mbm") == 0))
-      return (KSS_TYPE_INFO){.type = MBMDATA, .offset = 0};
+      return MBMDATA;
   }
 
-  return (KSS_TYPE_INFO){.type = KSS_TYPE_UNKNOWN, .offset = 0};
+  return KSS_TYPE_UNKNOWN;
 }
 
 void KSS_make_header(uint8_t *header, uint16_t load_adr, uint16_t load_size, uint16_t init_adr, uint16_t play_adr) {
@@ -232,15 +229,14 @@ static void msx_kanji_fix(unsigned char *title) {
 
 KSS *KSS_bin2kss(uint8_t *data, uint32_t data_size, const char *filename) {
   KSS *kss;
+  int type;
 
   if (data == NULL)
     return NULL;
 
-  KSS_TYPE_INFO type_info = KSS_check_type(data, data_size, filename);
-  data = &data[type_info.offset];
-  data_size = data_size - type_info.offset;
+  type = KSS_check_type(data, data_size, filename);
 
-  switch (type_info.type) {
+  switch (type) {
   case MBMDATA:
     kss = KSS_mbm2kss(data, data_size);
     if (kss)
@@ -289,7 +285,7 @@ KSS *KSS_bin2kss(uint8_t *data, uint32_t data_size, const char *filename) {
 
   if (kss == NULL)
     return NULL;
-  kss->type = type_info.type;
+  kss->type = type;
   msx_kanji_fix(kss->title);
   scan_info(kss);
   return kss;
