@@ -53,6 +53,12 @@ int KSS_isBGMdata(uint8_t *data, uint32_t size) {
   if (data[0] != 0xFE || size < 7 + 1 + 17 * 2) // BIN header + loop byte + 17 pointers to channel flows
     return 0;
 
+  // A BSAVE binary cannot be larger than its 7-byte header plus 65535 bytes of
+  // data (the maximum the MSX-BASIC BSAVE command can write), so anything bigger
+  // cannot be a BGM.
+  if (size > 7 + 65535)
+    return 0;
+
   const uint16_t base = rU16(1),  // RAM base address
       sz = 8 + rU16(3) - base,    // calculated=expected file size
       Mp = sz > size ? size : sz; // maximum offset
