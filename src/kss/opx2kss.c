@@ -43,11 +43,55 @@ static uint8_t FMTONE[512] = {
     0x63, 0x4A, 0xC1, 0xC1, 0xC1, 0xC1, 0x21, 0x04, 0x00, 0x09, 0x7E, 0x23, 0x66, 0x6F, 0xC5, 0xCD, 0xD5, 0x72,
 };
 
+/*
+ * OPX file format (MSX OPLLdriver2). The layout below was determined from
+ * the driver source code (the MSAVE / TITLE routines in A.MAC), distributed
+ * as srcpack.lzh, downloadable from
+ *   https://sakuramail.net/fswold/music.html#musopx
+ *   (https://sakuramail.net/fswold/music/srcpack.lzh)
+ *
+ * CALL MSAVE writes a fixed 128-byte header at the start of the file:
+ *
+ *   0x00..0x34  TITLE  (space-padded text, filled in by CALL TITLE)
+ *   0x35..0x36  CR LF
+ *   0x37..0x6B  MEMO   (space-padded text)
+ *   0x6C..0x6D  CR LF
+ *   0x6E..0x7A  CODE   (space-padded text)
+ *   0x7B..0x7C  CR LF
+ *   0x7D        0x1A   (EOF marker)
+ *
+ * followed by a 31-byte information block at 0x80:
+ *
+ *   0x82  FM voice count      0x84  envelope count
+ *   0x85  mode flags          0x86  format version (OPXVER: 0=v1, 1=v2)
+ *   0x87..0x9E  voice/rhythm/envelope/macro counts and work data
+ *
+ * then the music data and the voice/rhythm/envelope tables.
+ *
+ * KSS_isOPXdata() checks the header markers (the CR/LF terminators, the EOF
+ * byte) and the valid ranges of the information-block fields; base_ofs (0x7E)
+ * is the base of that field region, so base_ofs+2 (0x80) is its first byte.
+ * KSS_get_info_opxdata() reads the TITLE (and MEMO/CODE as extra info).
+ *
+ * The range/marker heuristic itself follows the improved OPX detection by
+ * Kaens (see https://github.com/Kaens/audio1sg).
+ */
+#define MATCHES_AT(offset, bytes) (memcmp(&(data[offset]), (bytes), sizeof(bytes) - 1) == 0)
+static const uint32_t base_ofs = 0x7E;
+
 int KSS_isOPXdata(uint8_t *data, uint32_t size) {
-  if ((128 + 32 < size) && /*data[0x7B]==0x0D&&data[0x7C]==0x0A&&*/ data[0x7D] == 0x1A)
-    return 1;
-  else
+  if (size < 128 + 32) return 0;
+  if (MATCHES_AT(0x7A, " \x0D\x0A\x1A")) {
+    if (!MATCHES_AT(0x35, "\x0D\x0A") || !MATCHES_AT(0x6C, "\x0D\x0A")) return 0;
+  } else if (!MATCHES_AT(0x7A, "    ")) return 0;
+  if (data[0] != 4)
+    for (uint8_t i = 0; i < 0x35; i++)
+      if (data[i] < 0x20) return 0;
+  if (data[base_ofs + 1] > 2 || data[base_ofs + 3] > 0x3F || data[base_ofs + 4] > 6 || data[base_ofs + 6] > 5 ||
+      data[base_ofs + 7] > 0x21 || data[base_ofs + 8] > 1 || data[base_ofs + 9] > 0x4F || data[base_ofs + 10] ||
+      data[base_ofs + 12] > 1 || data[base_ofs + 14] > 3 || data[base_ofs + 16] > 3 || data[base_ofs + 18] > 3)
     return 0;
+  return 1;
 }
 
 int KSS_set_fmbios(const uint8_t *data, uint32_t size) {
