@@ -9,7 +9,10 @@ static void get_information(KSS *kss, uint8_t *data, uint32_t size) {
   if (!kss)
     return;
 
-  kss->type = KSS_check_type(data, size, NULL);
+  KSS_TYPE_INFO type_info = KSS_check_type(data, size, NULL);
+  kss->type = type_info.type;
+  data = &data[type_info.offset];
+  size = size - type_info.offset;
 
   switch (kss->type) {
   case MGSDATA:
