@@ -52,7 +52,7 @@ static uint32_t base_ofs;
 static int KSS_isOPXdata_at(uint8_t *data, uint32_t size, uint32_t ofs) {
   data = &data[ofs];
   base_ofs = BASE_OFS;
-  if (ofs + size < 128 + 32) return 0;
+  if (size < ofs + 128 + 32) return 0;
   if (MATCHES_AT(0x7A, " \x0D\x0A\x1A")) {
     if (!MATCHES_AT(0x35, "\x0D\x0A") || !MATCHES_AT(0x6C, "\x0D\x0A")) return 0;
   } else if (!MATCHES_AT(0x7A, "    ")) return 0;
