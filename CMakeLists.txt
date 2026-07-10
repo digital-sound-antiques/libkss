@@ -47,3 +47,10 @@ else()
 	target_link_libraries(kss2wav kss m)
 endif()
 
+add_executable(kssinfo EXCLUDE_FROM_ALL example/kssinfo.c)
+if(NOT CMAKE_COMPILER_IS_GNUCC)
+	target_link_libraries(kssinfo kss)
+else()
+	target_link_libraries(kssinfo kss m)
+endif()
+
