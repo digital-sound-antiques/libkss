@@ -64,21 +64,22 @@ static uint8_t FMTONE[512] = {
  *
  *   0x82  FM voice count      0x84  envelope count
  *   0x85  mode flags          0x86  format version (OPXVER: 0=v1, 1=v2)
- *   0x87..0x9E  voice/rhythm/envelope/macro counts and work data
+ *   0x87..0x9E  12 track-start pointers (2 bytes each)
  *
  * then the music data and the voice/rhythm/envelope tables.
  *
- * KSS_isOPXdata() checks the header markers (the CR/LF terminators, the EOF
- * byte) and the valid ranges of the information-block fields; base_ofs (0x7E)
- * is the base of that field region, so base_ofs+2 (0x80) is its first byte.
- * KSS_get_info_opxdata() reads the TITLE (and MEMO/CODE as extra info).
- *
- * The range/marker heuristic itself follows the improved OPX detection by
- * Kaens (see https://github.com/Kaens/audio1sg).
+ * KSS_isOPXdata() detects this header; KSS_get_info_opxdata() reads the TITLE
+ * (and MEMO/CODE as extra info).
  */
 #define MATCHES_AT(offset, bytes) (memcmp(&(data[offset]), (bytes), sizeof(bytes) - 1) == 0)
-static const uint32_t base_ofs = 0x7E;
 
+// Detect the OPX header by its fixed markers (CR/LF terminators, EOF byte) and
+// printable leading text. This follows the improved detection by Kaens
+// (https://github.com/Kaens/audio1sg); its fixed value-range checks on the
+// information block were dropped, since the voice/envelope counts and most
+// track-pointer bytes legitimately vary between songs and rejected valid files.
+// The one retained bound: every track-start pointer must stay below the 16 KiB
+// music-data limit (OPLLdriver2 measures free space against 0x4000).
 int KSS_isOPXdata(uint8_t *data, uint32_t size) {
   if (size < 128 + 32) return 0;
   if (MATCHES_AT(0x7A, " \x0D\x0A\x1A")) {
@@ -87,10 +88,9 @@ int KSS_isOPXdata(uint8_t *data, uint32_t size) {
   if (data[0] != 4)
     for (uint8_t i = 0; i < 0x35; i++)
       if (data[i] < 0x20) return 0;
-  if (data[base_ofs + 1] > 2 || data[base_ofs + 3] > 0x3F || data[base_ofs + 4] > 6 || data[base_ofs + 6] > 5 ||
-      data[base_ofs + 7] > 0x21 || data[base_ofs + 8] > 1 || data[base_ofs + 9] > 0x4F || data[base_ofs + 10] ||
-      data[base_ofs + 12] > 1 || data[base_ofs + 14] > 3 || data[base_ofs + 16] > 3 || data[base_ofs + 18] > 3)
-    return 0;
+  // the 12 track-start pointers (0x87..0x9E) are offsets into the <=16KiB music data
+  for (uint8_t i = 0; i < 12; i++)
+    if ((data[0x87 + i * 2] | (data[0x88 + i * 2] << 8)) >= 0x4000) return 0;
   return 1;
 }
 
