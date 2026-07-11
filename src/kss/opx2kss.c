@@ -75,11 +75,12 @@ static uint8_t FMTONE[512] = {
 
 // Detect the OPX header by its fixed markers (CR/LF terminators, EOF byte) and
 // printable leading text. This follows the improved detection by Kaens
-// (https://github.com/Kaens/audio1sg); its fixed value-range checks on the
-// information block were dropped, since the voice/envelope counts and most
+// (https://github.com/Kaens/audio1sg); most of its fixed value-range checks on
+// the information block were dropped, since the voice/envelope counts and the
 // track-pointer bytes legitimately vary between songs and rejected valid files.
-// The one retained bound: every track-start pointer must stay below the 16 KiB
-// music-data limit (OPLLdriver2 measures free space against 0x4000).
+// The checks kept are the two the format actually bounds: the format version
+// (OPXVER is 0 or 1) and the track-start pointers, which must stay below the
+// 16 KiB music-data limit (OPLLdriver2 measures free space against 0x4000).
 int KSS_isOPXdata(uint8_t *data, uint32_t size) {
   if (size < 128 + 32) return 0;
   if (MATCHES_AT(0x7A, " \x0D\x0A\x1A")) {
@@ -88,6 +89,7 @@ int KSS_isOPXdata(uint8_t *data, uint32_t size) {
   if (data[0] != 4)
     for (uint8_t i = 0; i < 0x35; i++)
       if (data[i] < 0x20) return 0;
+  if (data[0x86] > 1) return 0; // format version (OPXVER) is 0 or 1
   // the 12 track-start pointers (0x87..0x9E) are offsets into the <=16KiB music data
   for (uint8_t i = 0; i < 12; i++)
     if ((data[0x87 + i * 2] | (data[0x88 + i * 2] << 8)) >= 0x4000) return 0;
