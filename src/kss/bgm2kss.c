@@ -173,7 +173,7 @@ void KSS_get_info_bgmdata(KSS *kss, uint8_t *data, uint32_t size) {
   uint32_t offset, i;
 
   if (size > 0x60 && !strncmp((const char *)(data + 0x50), "BTO", 3)) {
-    strcpy((char *)kss->idstr, "BTO");
+    strcpy((char *)kss->idstr, "BGM:BTO");
     offset = data[0x5B] + (data[0x5C] << 8) - (data[0x59] + (data[0x5a] << 8)) + 7;
     for (i = 0; i < 255; i++) {
       if ((offset + i) >= size)
@@ -197,6 +197,7 @@ void KSS_get_info_bgmdata(KSS *kss, uint8_t *data, uint32_t size) {
     if (kss->extra != NULL)
       strcpy((char *)kss->extra, extra);
   } else {
+    strcpy((char *)kss->idstr, "BGM");
     kss->title[0] = '\0';
     kss->extra = NULL;
   }
