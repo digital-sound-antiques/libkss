@@ -138,6 +138,14 @@ void KSSPLAY_load_state(KSSPLAY *kssplay, const uint8_t *in, int size);
  */
 void KSSPLAY_calc_per_ch(KSSPLAY *kssplay, KSSPLAY_PER_CH_OUT *per_ch_out, uint32_t length);
 
+/**
+ * Like KSSPLAY_calc, but also fills per_ch_out[length] with the raw per-channel
+ * outputs for each sample (pre-mix: volume/pan/filter/fade are not applied).
+ * A single synthesis pass yields both the mixed audio (buf) and the per-channel
+ * waveforms (per_ch_out).
+ */
+void KSSPLAY_calc_with_per_ch(KSSPLAY *kssplay, int16_t *buf, KSSPLAY_PER_CH_OUT *per_ch_out, uint32_t length);
+
 /* Delete KSSPLAY object */
 void KSSPLAY_delete(KSSPLAY *);
 
