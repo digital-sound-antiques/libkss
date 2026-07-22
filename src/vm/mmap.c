@@ -215,3 +215,60 @@ void MMAP_delete(MMAP *mmap) {
 
   free(mmap);
 }
+
+static uint32_t bank_body_size(const BANK *b) { return b->type == BANK_16K ? 0x4000 : 0x2000; }
+
+/* Zero every writable (RAM) bank body. */
+void MMAP_clear_ram(MMAP *mmap) {
+  int slot, bank;
+  for (slot = 0; slot < 0x10; slot++)
+    for (bank = 0; bank < 0x100; bank++) {
+      BANK *b = mmap->bank[slot][bank];
+      if (b && (b->attr & BANK_WRITEABLE))
+        memset(b->body, 0, bank_body_size(b));
+    }
+}
+
+int MMAP_save_state(MMAP *mmap, uint8_t *out) {
+  int n = 0, slot, bank;
+  /* current page -> (slot,bank) mapping (readmap/writemap are pointers, re-derived on load) */
+  if (out) memcpy(out + n, mmap->current_slot, sizeof(mmap->current_slot));
+  n += (int)sizeof(mmap->current_slot);
+  if (out) memcpy(out + n, mmap->current_bank, sizeof(mmap->current_bank));
+  n += (int)sizeof(mmap->current_bank);
+  /* writable (RAM) bank bodies, in a fixed iteration order */
+  for (slot = 0; slot < 0x10; slot++)
+    for (bank = 0; bank < 0x100; bank++) {
+      BANK *b = mmap->bank[slot][bank];
+      if (b && (b->attr & BANK_WRITEABLE)) {
+        uint32_t size = bank_body_size(b);
+        if (out) memcpy(out + n, b->body, size);
+        n += (int)size;
+      }
+    }
+  return n;
+}
+
+void MMAP_load_state(MMAP *mmap, const uint8_t *in, int size) {
+  int n = 0, slot, bank, i;
+  if (size < (int)(sizeof(mmap->current_slot) + sizeof(mmap->current_bank)))
+    return;
+  memcpy(mmap->current_slot, in + n, sizeof(mmap->current_slot));
+  n += (int)sizeof(mmap->current_slot);
+  memcpy(mmap->current_bank, in + n, sizeof(mmap->current_bank));
+  n += (int)sizeof(mmap->current_bank);
+  for (slot = 0; slot < 0x10; slot++)
+    for (bank = 0; bank < 0x100; bank++) {
+      BANK *b = mmap->bank[slot][bank];
+      if (b && (b->attr & BANK_WRITEABLE)) {
+        uint32_t bs = bank_body_size(b);
+        if (n + (int)bs > size)
+          return; /* truncated / mismatched topology */
+        memcpy(b->body, in + n, bs);
+        n += (int)bs;
+      }
+    }
+  /* rebuild readmap/writemap (pointers into this instance's bodies) from the mapping */
+  for (i = 0; i < 8; i++)
+    MMAP_select_bank(mmap, i, mmap->current_slot[i], mmap->current_bank[i]);
+}

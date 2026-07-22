@@ -124,11 +124,27 @@ void KSSPLAY_calc(KSSPLAY *, int16_t *buf, uint32_t length);
 /* Calcurate samples internally. No output is generated. */
 void KSSPLAY_calc_silent(KSSPLAY *, uint32_t length);
 
+/* Save/restore the playback state (for seek / keyframe checkpoints): the KSSPLAY
+   playback progress plus the whole VM (CPU, sound chips and RAM). Host settings
+   (volume/mute/pan/type/filters) are not included, so a load keeps them; the
+   same song must already be loaded (matching memory topology). Call with
+   out=NULL to obtain the required buffer size. */
+int KSSPLAY_save_state(KSSPLAY *kssplay, uint8_t *out);
+void KSSPLAY_load_state(KSSPLAY *kssplay, const uint8_t *in, int size);
+
 /**
  * Calcurate wave samples as a sequence of KSSPLAY_PER_CH_OUT struct.
  * This function generates raw wave samples. All volume and filter settings are ignored.
  */
 void KSSPLAY_calc_per_ch(KSSPLAY *kssplay, KSSPLAY_PER_CH_OUT *per_ch_out, uint32_t length);
+
+/**
+ * Like KSSPLAY_calc, but also fills per_ch_out[length] with the raw per-channel
+ * outputs for each sample (pre-mix: volume/pan/filter/fade are not applied).
+ * A single synthesis pass yields both the mixed audio (buf) and the per-channel
+ * waveforms (per_ch_out).
+ */
+void KSSPLAY_calc_with_per_ch(KSSPLAY *kssplay, int16_t *buf, KSSPLAY_PER_CH_OUT *per_ch_out, uint32_t length);
 
 /* Delete KSSPLAY object */
 void KSSPLAY_delete(KSSPLAY *);

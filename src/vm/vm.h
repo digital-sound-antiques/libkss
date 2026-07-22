@@ -97,6 +97,15 @@ void VM_set_OPL_type(VM *vm, uint32_t opl_type);
 void VM_write_memory(VM *vm, uint32_t a, uint32_t d);
 void VM_write_io(VM *vm, uint32_t a, uint32_t d);
 
+/* Save/restore the full runtime state: the Z80 (kmz80) context and event timer
+   (both embedded in VM), the I/O map and scalars, every sound chip, and the
+   writable RAM. Host bindings and heap allocations (chips, mmap, callbacks) are
+   kept on load, so the state carries no absolute pointers into a specific
+   instance. The memory/bank topology must match on load (same instance, or one
+   that loaded the same song). out=NULL returns the required buffer size. */
+int VM_save_state(VM *vm, uint8_t *out);
+void VM_load_state(VM *vm, const uint8_t *in, int size);
+
 #ifdef __cplusplus
 }
 #endif

@@ -170,7 +170,7 @@ void KSSPLAY_set_device_type(KSSPLAY *kssplay, KSS_DEVICE device, uint32_t type)
 }
 
 void KSSPLAY_reset(KSSPLAY *kssplay, uint32_t song, uint32_t cpu_speed) {
-  int i;
+  int i, j;
 
   if (!kssplay->kss) {
     return;
@@ -181,6 +181,9 @@ void KSSPLAY_reset(KSSPLAY *kssplay, uint32_t song, uint32_t cpu_speed) {
   if (kssplay->vsync_freq == 0) {
     kssplay->vsync_freq = kssplay->kss->pal_mode ? PAL_FREQ : NTSC_FREQ;
   }
+
+  /* Wipe any RAM left over from a previously-played song. */
+  MMAP_clear_ram(kssplay->vm->mmap);
 
   VM_init_memory(kssplay->vm, kssplay->kss->ram_mode, kssplay->kss->load_adr, kssplay->kss->load_len,
                  kssplay->main_data);
@@ -209,7 +212,57 @@ void KSSPLAY_reset(KSSPLAY *kssplay, uint32_t song, uint32_t cpu_speed) {
   memset(mgs_text, 0, 128);
 
   PSG_RateConv_reset(kssplay->psg_rconv, kssplay->vm->psg, kssplay->rate);
+
+  /* Clear the output-stage filter state */
+  for (i = 0; i < 2; i++) {
+    kssplay->dcf[i]->in = kssplay->dcf[i]->out = 0;
+    kssplay->rcf[i]->out = 0;
+    for (j = 0; j < KSS_DEVICE_MAX; j++) {
+      memset(kssplay->device_fir[i][j]->buf, 0, sizeof(kssplay->device_fir[i][j]->buf));
+    }
+  }
+  kssplay->lastout[0] = kssplay->lastout[1] = 0;
 }
+
+/* Dynamic playback fields carried by a saved state, in a single list so save and
+   load always stay in the same order. Host configuration (volume, mute, pan,
+   device type, filters, rate/nch/bps) is intentionally excluded so a load keeps
+   the current settings rather than reverting them. */
+#define KSSPLAY_STATE_FIELDS(X) \
+  X(step_cnt) X(step_inc) X(fade) X(fade_step) X(fade_flag) X(silent) X(decoded_length) X(lastout)
+
+int KSSPLAY_save_state(KSSPLAY *kssplay, uint8_t *out) {
+  int n = 0;
+#define X(f)                                                    \
+  do {                                                          \
+    if (out) memcpy(out + n, &kssplay->f, sizeof(kssplay->f));  \
+    n += (int)sizeof(kssplay->f);                               \
+  } while (0);
+  KSSPLAY_STATE_FIELDS(X)
+#undef X
+  /* the VM (CPU, sound chips and RAM) is the bulk of the state */
+  n += VM_save_state(kssplay->vm, out ? out + n : (uint8_t *)0);
+  return n;
+}
+
+void KSSPLAY_load_state(KSSPLAY *kssplay, const uint8_t *in, int size) {
+  int n = 0;
+#define X(f)                                                    \
+  do {                                                          \
+    if (n + (int)sizeof(kssplay->f) > size) return;             \
+    memcpy(&kssplay->f, in + n, sizeof(kssplay->f));            \
+    n += (int)sizeof(kssplay->f);                               \
+  } while (0);
+  KSSPLAY_STATE_FIELDS(X)
+#undef X
+  VM_load_state(kssplay->vm, in + n, size - n);
+  /* The output resamplers/filters keep their live state, so resuming playback
+     from the point the state was saved is seamless. Per-channel chip masks live
+     in the VM state and revert here; re-apply them via KSSPLAY_set_channel_mask
+     if the caller needs them preserved across a load. */
+}
+
+#undef KSSPLAY_STATE_FIELDS
 
 KSSPLAY *KSSPLAY_new(uint32_t rate, uint32_t nch, uint32_t bps) {
   KSSPLAY *kssplay;
@@ -509,7 +562,33 @@ void KSSPLAY_calc_per_ch(KSSPLAY *kssplay, KSSPLAY_PER_CH_OUT *out, uint32_t len
   }
 }
 
-static inline void calc_mono(KSSPLAY *kssplay, int16_t *buf, uint32_t length) {
+/* Copy the current per-channel raw outputs (ch_out) of the active devices into
+   `out`. Assumes the per-sample device calc already ran this sample (ch_out is
+   current); does no synthesis and applies no fade/filter. Mirrors calc_per_ch's
+   copy section so both stay consistent. */
+static inline void capture_per_ch(KSSPLAY *kssplay, KSSPLAY_PER_CH_OUT *out) {
+  memset(out, 0, sizeof(*out));
+  if (kssplay->kss->msx_audio && !kssplay->device_mute[KSS_DEVICE_OPL]) {
+    memcpy(out->opl, kssplay->vm->opl->ch_out, sizeof(out->opl));
+  }
+  if (kssplay->kss->fmpac && !kssplay->device_mute[KSS_DEVICE_OPLL]) {
+    memcpy(out->opll, kssplay->vm->opll->ch_out, sizeof(out->opll));
+  }
+  if (!kssplay->device_mute[KSS_DEVICE_PSG]) {
+    if (kssplay->kss->sn76489) {
+      memcpy(out->sng, kssplay->vm->sng->ch_out, sizeof(out->sng));
+    } else {
+      memcpy(out->psg, kssplay->vm->psg->ch_out, sizeof(out->psg));
+    }
+  }
+  if (!kssplay->device_mute[KSS_DEVICE_SCC]) {
+    memcpy(out->scc, kssplay->vm->scc->ch_out, sizeof(out->scc));
+  }
+  out->dac[0] = kssplay->vm->DA1;
+  out->dac[1] = kssplay->vm->DA8;
+}
+
+static inline void calc_mono(KSSPLAY *kssplay, int16_t *buf, KSSPLAY_PER_CH_OUT *per_ch, uint32_t length) {
   uint32_t i;
   int32_t d;
   int32_t volume[KSS_DEVICE_MAX];
@@ -546,6 +625,9 @@ static inline void calc_mono(KSSPLAY *kssplay, int16_t *buf, uint32_t length) {
                         volume[KSS_DEVICE_SCC]);
     }
 
+    /* capture the raw per-channel outputs before the mix filters/fade */
+    if (per_ch) capture_per_ch(kssplay, per_ch + i);
+
     /* Check silent span */
     if (kssplay->lastout[0] == d) {
       kssplay->silent++;
@@ -559,7 +641,7 @@ static inline void calc_mono(KSSPLAY *kssplay, int16_t *buf, uint32_t length) {
   }
 }
 
-static inline void calc_stereo(KSSPLAY *kssplay, int16_t *buf, uint32_t length) {
+static inline void calc_stereo(KSSPLAY *kssplay, int16_t *buf, KSSPLAY_PER_CH_OUT *per_ch, uint32_t length) {
   uint32_t i;
   int32_t ch[2], b[2], c;
   int32_t volume[KSS_DEVICE_MAX][2];
@@ -651,6 +733,9 @@ static inline void calc_stereo(KSSPLAY *kssplay, int16_t *buf, uint32_t length) 
       }
     }
 
+    /* capture the raw per-channel outputs before the mix filters/fade */
+    if (per_ch) capture_per_ch(kssplay, per_ch + i);
+
     /* Check silent span */
     if (kssplay->lastout[0] == ch[0] && kssplay->lastout[1] == ch[1]) {
       kssplay->silent++;
@@ -669,9 +754,23 @@ static inline void calc_stereo(KSSPLAY *kssplay, int16_t *buf, uint32_t length) 
 
 void KSSPLAY_calc(KSSPLAY *kssplay, int16_t *buf, uint32_t length) {
   if (kssplay->nch == 1) {
-    calc_mono(kssplay, buf, length);
+    calc_mono(kssplay, buf, NULL, length);
   } else {
-    calc_stereo(kssplay, buf, length);
+    calc_stereo(kssplay, buf, NULL, length);
+  }
+
+  kssplay->decoded_length += length;
+  LPDETECT_update(kssplay->vm->lpde, kssplay->decoded_length * 1000 / kssplay->rate, 30 * 1000, 1000);
+}
+
+/* Like KSSPLAY_calc, but also fills `per_ch_out[length]` with the raw
+   per-channel outputs for each sample (pre-mix, no volume/pan/filter/fade) — one
+   synthesis pass yields both the mixed audio and the per-channel waveforms. */
+void KSSPLAY_calc_with_per_ch(KSSPLAY *kssplay, int16_t *buf, KSSPLAY_PER_CH_OUT *per_ch_out, uint32_t length) {
+  if (kssplay->nch == 1) {
+    calc_mono(kssplay, buf, per_ch_out, length);
+  } else {
+    calc_stereo(kssplay, buf, per_ch_out, length);
   }
 
   kssplay->decoded_length += length;
