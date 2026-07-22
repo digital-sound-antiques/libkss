@@ -218,6 +218,17 @@ void MMAP_delete(MMAP *mmap) {
 
 static uint32_t bank_body_size(const BANK *b) { return b->type == BANK_16K ? 0x4000 : 0x2000; }
 
+/* Zero every writable (RAM) bank body. */
+void MMAP_clear_ram(MMAP *mmap) {
+  int slot, bank;
+  for (slot = 0; slot < 0x10; slot++)
+    for (bank = 0; bank < 0x100; bank++) {
+      BANK *b = mmap->bank[slot][bank];
+      if (b && (b->attr & BANK_WRITEABLE))
+        memset(b->body, 0, bank_body_size(b));
+    }
+}
+
 int MMAP_save_state(MMAP *mmap, uint8_t *out) {
   int n = 0, slot, bank;
   /* current page -> (slot,bank) mapping (readmap/writemap are pointers, re-derived on load) */

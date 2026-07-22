@@ -99,6 +99,10 @@ void MMAP_write_memory(MMAP *mmap, uint32_t adr, uint32_t val);
 int MMAP_save_state(MMAP *mmap, uint8_t *out);
 void MMAP_load_state(MMAP *mmap, const uint8_t *in, int size);
 
+/* Zero all writable (RAM) bank bodies. Call on reset to avoid leaking the
+   previous song's work RAM into the next song. */
+void MMAP_clear_ram(MMAP *mmap);
+
 #ifdef __cplusplus
 }
 #endif

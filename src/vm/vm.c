@@ -291,6 +291,7 @@ void VM_reset(VM *vm, uint32_t clock, uint32_t init_adr, uint32_t vsync_adr, dou
   memset(vm->IO, 0, sizeof(vm->IO));
   memset(vm->WIOPROC, 0, sizeof(vm->IO));
   vm->DA1 = 0;
+  vm->DA8 = 0;
   vm->DA8_enable = DA8;
 
   vm->context.user = vm;

@@ -1,3 +1,7 @@
+# 1.3.0 (2026-07-22)
+- Fixed the reset function to fully clear runtime state.
+- Added save/load state functionality.
+
 # 1.2.1 (2024-08-28)
 - Update emu2149 to fix [issue 5](https://github.com/digital-sound-antiques/emu2149/issues/5).
 

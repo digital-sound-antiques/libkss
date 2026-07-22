@@ -170,7 +170,7 @@ void KSSPLAY_set_device_type(KSSPLAY *kssplay, KSS_DEVICE device, uint32_t type)
 }
 
 void KSSPLAY_reset(KSSPLAY *kssplay, uint32_t song, uint32_t cpu_speed) {
-  int i;
+  int i, j;
 
   if (!kssplay->kss) {
     return;
@@ -181,6 +181,9 @@ void KSSPLAY_reset(KSSPLAY *kssplay, uint32_t song, uint32_t cpu_speed) {
   if (kssplay->vsync_freq == 0) {
     kssplay->vsync_freq = kssplay->kss->pal_mode ? PAL_FREQ : NTSC_FREQ;
   }
+
+  /* Wipe any RAM left over from a previously-played song. */
+  MMAP_clear_ram(kssplay->vm->mmap);
 
   VM_init_memory(kssplay->vm, kssplay->kss->ram_mode, kssplay->kss->load_adr, kssplay->kss->load_len,
                  kssplay->main_data);
@@ -209,6 +212,16 @@ void KSSPLAY_reset(KSSPLAY *kssplay, uint32_t song, uint32_t cpu_speed) {
   memset(mgs_text, 0, 128);
 
   PSG_RateConv_reset(kssplay->psg_rconv, kssplay->vm->psg, kssplay->rate);
+
+  /* Clear the output-stage filter state */
+  for (i = 0; i < 2; i++) {
+    kssplay->dcf[i]->in = kssplay->dcf[i]->out = 0;
+    kssplay->rcf[i]->out = 0;
+    for (j = 0; j < KSS_DEVICE_MAX; j++) {
+      memset(kssplay->device_fir[i][j]->buf, 0, sizeof(kssplay->device_fir[i][j]->buf));
+    }
+  }
+  kssplay->lastout[0] = kssplay->lastout[1] = 0;
 }
 
 /* Dynamic playback fields carried by a saved state, in a single list so save and
