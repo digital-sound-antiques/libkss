@@ -1,3 +1,7 @@
+# 1.3.1 (2026-09-07)
+- Updated emu2413 to 1.6.1.
+- Updated emu8950 to 1.2.1.
+
 # 1.3.0 (2026-07-22)
 - Fixed the reset function to fully clear runtime state.
 - Added save/load state functionality.
