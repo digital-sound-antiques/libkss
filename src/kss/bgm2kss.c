@@ -209,21 +209,31 @@ void KSS_get_info_bgmdata(KSS *kss, uint8_t *data, uint32_t size) {
 KSS *KSS_bgm2kss(uint8_t *data, uint32_t size) {
   KSS *kss;
   uint8_t *buf;
-  uint16_t load_adr = 0x6000, load_size = 0x8000 + size - load_adr;
+  uint16_t load_adr = 0x6000, data_adr = 0x8000, load_size;
   uint16_t init_adr = 0x7E00, play_adr = 0x7F00;
+  /* The song is loaded at 0x8000, so it can only fill what is left of the Z80
+     address space. load_size is a 16-bit KSS header field and used to be
+     computed straight from size, so a larger input wrapped it and the copy
+     below ran off a too-small buffer. Drop the excess instead: a truncated
+     song plays wrong, but it stays inside the buffer. */
+  uint32_t max_data_size = 0x10000 - data_adr;
+  uint32_t data_size = (size < max_data_size) ? size : max_data_size;
 
-  if ((size < 16) || (kinrou_size == 0))
+  if ((size < 16) || (kinrou_size < 8))
     return NULL;
+
+  load_size = (uint16_t)(data_adr + data_size - load_adr);
 
   if ((buf = malloc(load_size + KSS_HEADER_SIZE)) == NULL)
     return NULL;
 
+  memset(buf, 0, load_size + KSS_HEADER_SIZE);
   KSS_make_header(buf, load_adr, load_size, init_adr, play_adr);
   buf[0x0F] = 0x01;
   memcpy(buf + KSS_HEADER_SIZE, KINROU + 0x07, kinrou_size - 7);
-  memcpy(buf + KSS_HEADER_SIZE + 0x1E00, kinrou_init, 0x100);
-  memcpy(buf + KSS_HEADER_SIZE + 0x1F00, kinrou_play, 0x100);
-  memcpy(buf + KSS_HEADER_SIZE + 0x8000 - load_adr, data, size);
+  memcpy(buf + KSS_HEADER_SIZE + init_adr - load_adr, kinrou_init, 0x100);
+  memcpy(buf + KSS_HEADER_SIZE + play_adr - load_adr, kinrou_play, 0x100);
+  memcpy(buf + KSS_HEADER_SIZE + data_adr - load_adr, data, data_size);
 
   kss = KSS_new(buf, (load_size + KSS_HEADER_SIZE));
 

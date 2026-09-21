@@ -132,6 +132,11 @@ KSS *KSS_mgs2kss(uint8_t *data, uint32_t size) {
   uint8_t *buf;
   uint16_t load_adr = 0x200, load_size = 0x8000 + 0x200 - 0x200;
   uint16_t init_adr = 0x8000, play_adr = init_adr + 0x100;
+  /* MGSDRV is mapped at 0x6000, so the song can only use the gap between the
+     load address and the driver. Anything past that is dropped: a truncated
+     song plays wrong, but it must not run over the driver or the buffer. */
+  uint32_t max_data_size = 0x6000 - load_adr;
+  uint32_t data_size = (size < max_data_size) ? size : max_data_size;
 
   if (mgsdrv_size == 0)
     return NULL;
@@ -139,8 +144,11 @@ KSS *KSS_mgs2kss(uint8_t *data, uint32_t size) {
   if ((buf = malloc(load_size + KSS_HEADER_SIZE)) == NULL)
     return NULL;
 
+  /* the gap between the song and the driver is mapped as RAM, so leave it
+     zeroed rather than filled with whatever malloc handed back */
+  memset(buf, 0, load_size + KSS_HEADER_SIZE);
   KSS_make_header(buf, load_adr, load_size, init_adr, play_adr);
-  memcpy(buf + KSS_HEADER_SIZE, data, size);
+  memcpy(buf + KSS_HEADER_SIZE, data, data_size);
   memcpy(buf + KSS_HEADER_SIZE + 0x6000 - load_adr, MGSDRV + 0x0D, 0x2000);
   memcpy(buf + KSS_HEADER_SIZE + init_adr - load_adr, mgsdrv_init, 0x100);
   memcpy(buf + KSS_HEADER_SIZE + init_adr + 0x100 - load_adr, mgsdrv_play, 0x100);

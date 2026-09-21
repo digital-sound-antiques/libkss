@@ -216,6 +216,7 @@ KSS *KSS_mpk1062kss(uint8_t *data, uint32_t size) {
   uint8_t *buf;
   uint16_t data_adr, load_adr, load_size;
   uint16_t drv_adr = 0x4000, init_adr = 0x6000, play_adr = 0x6100;
+  uint32_t data_size = size;
 
   if (size < 16 || mpkdrv106_size == 0)
     return NULL;
@@ -227,7 +228,14 @@ KSS *KSS_mpk1062kss(uint8_t *data, uint32_t size) {
   } else {
     data_adr = 0x6200;
     load_adr = 0x4000;
-    load_size = data_adr + size - load_adr;
+    /* The song is loaded at data_adr, so it can only fill what is left of the
+       Z80 address space. load_size is a 16-bit KSS header field and used to be
+       computed straight from size, so a larger input wrapped it and the copy
+       below ran off a too-small buffer. Drop the excess instead: a truncated
+       song plays wrong, but it stays inside the buffer. */
+    if (data_size > (uint32_t)(0x10000 - data_adr))
+      data_size = 0x10000 - data_adr;
+    load_size = (uint16_t)(data_adr + data_size - load_adr);
     init_adr = 0x6000;
     play_adr = 0x6100;
   }
@@ -235,12 +243,13 @@ KSS *KSS_mpk1062kss(uint8_t *data, uint32_t size) {
   if ((buf = malloc(load_size + KSS_HEADER_SIZE)) == NULL)
     return NULL;
 
+  memset(buf, 0, load_size + KSS_HEADER_SIZE);
   KSS_make_header(buf, load_adr, load_size, init_adr, play_adr);
 
   memcpy(buf + KSS_HEADER_SIZE + drv_adr - load_adr, MPKDRV106, 0x2000);
   memcpy(buf + KSS_HEADER_SIZE + init_adr - load_adr, mpk106_init, 0x100);
   memcpy(buf + KSS_HEADER_SIZE + play_adr - load_adr, mpk106_play, 0x100);
-  memcpy(buf + KSS_HEADER_SIZE + data_adr - load_adr, data, size);
+  memcpy(buf + KSS_HEADER_SIZE + data_adr - load_adr, data, data_size);
   buf[KSS_HEADER_SIZE + init_adr + (0xE) - load_adr] = data_adr & 0xFF;
   buf[KSS_HEADER_SIZE + init_adr + 0xF - load_adr] = data_adr >> 8;
   kss = KSS_new(buf, (load_size + KSS_HEADER_SIZE));
@@ -255,6 +264,7 @@ KSS *KSS_mpk1032kss(uint8_t *data, uint32_t size) {
   uint8_t *buf;
   uint16_t data_adr, load_adr, load_size;
   uint16_t drv_adr = 0x4000, init_adr = 0x6000, play_adr = 0x6100;
+  uint32_t data_size = size;
 
   if (size < 16 || mpkdrv103_size == 0)
     return NULL;
@@ -266,7 +276,14 @@ KSS *KSS_mpk1032kss(uint8_t *data, uint32_t size) {
   } else {
     data_adr = 0x6200;
     load_adr = 0x4000;
-    load_size = data_adr + size - load_adr;
+    /* The song is loaded at data_adr, so it can only fill what is left of the
+       Z80 address space. load_size is a 16-bit KSS header field and used to be
+       computed straight from size, so a larger input wrapped it and the copy
+       below ran off a too-small buffer. Drop the excess instead: a truncated
+       song plays wrong, but it stays inside the buffer. */
+    if (data_size > (uint32_t)(0x10000 - data_adr))
+      data_size = 0x10000 - data_adr;
+    load_size = (uint16_t)(data_adr + data_size - load_adr);
     init_adr = 0x6000;
     play_adr = 0x6100;
   }
@@ -274,6 +291,7 @@ KSS *KSS_mpk1032kss(uint8_t *data, uint32_t size) {
   if ((buf = malloc(load_size + KSS_HEADER_SIZE)) == NULL)
     return NULL;
 
+  memset(buf, 0, load_size + KSS_HEADER_SIZE);
   KSS_make_header(buf, load_adr, load_size, init_adr, play_adr);
   buf[0x0F] = 0x05;
 
@@ -282,7 +300,7 @@ KSS *KSS_mpk1032kss(uint8_t *data, uint32_t size) {
   /* patch for driver */
   memcpy(buf + KSS_HEADER_SIZE + init_adr - load_adr, mpk103_init, 0x100);
   memcpy(buf + KSS_HEADER_SIZE + play_adr - load_adr, mpk103_play, 0x100);
-  memcpy(buf + KSS_HEADER_SIZE + data_adr - load_adr, data, size);
+  memcpy(buf + KSS_HEADER_SIZE + data_adr - load_adr, data, data_size);
   buf[KSS_HEADER_SIZE + init_adr + 0x6 - load_adr] = data_adr & 0xFF;
   buf[KSS_HEADER_SIZE + init_adr + 0x7 - load_adr] = data_adr >> 8;
 
