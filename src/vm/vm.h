@@ -24,7 +24,7 @@ extern "C" {
 #define VM_INVALID_ADDRESS (0x10000)
 
 typedef struct tagVM VM;
-typedef int (*VM_WIOPROC)(VM *, uint32_t, uint32_t);
+typedef int (*VM_WIOPROC)(VM *, uint32_t, uint32_t, void *context);
 
 struct tagVM {
   KMZ80_CONTEXT context;
@@ -36,6 +36,7 @@ struct tagVM {
 
   uint8_t IO[0x100];
   VM_WIOPROC WIOPROC[0x100];
+  void *WIOPROC_CONTEXT[0x100];
 
   uint32_t clock; /* CPU clock */
   uint32_t vsync_cycles;
@@ -87,7 +88,7 @@ void VM_init_bank(VM *vm, uint32_t mode, uint32_t num, uint32_t offset, uint8_t 
 uint32_t VM_exec(VM *vm, uint32_t cycles);
 void VM_exec_func(VM *vm, uint32_t init_adr);
 void VM_set_clock(VM *vm, uint32_t clock, double vsync_freq);
-void VM_set_wioproc(VM *vm, uint32_t a, VM_WIOPROC p);
+void VM_set_wioproc(VM *vm, uint32_t a, VM_WIOPROC p, void *context);
 
 void VM_set_PSG_type(VM *vm, uint32_t psg_type);
 void VM_set_SCC_type(VM *vm, uint32_t scc_type);

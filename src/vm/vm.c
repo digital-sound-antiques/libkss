@@ -75,7 +75,7 @@ static void iowrite(VM *vm, uint32_t a, uint32_t d) {
   vm->IO[a] = (uint8_t)(d & 0xff);
 
   if (vm->WIOPROC[a])
-    vm->WIOPROC[a](vm, a, d);
+    vm->WIOPROC[a](vm, a, d, vm->WIOPROC_CONTEXT[a]);
 
   switch (a) {
   case 0x06:
@@ -214,7 +214,10 @@ uint32_t VM_exec(VM *vm, uint32_t cycles) { return kmz80_exec(&vm->context, cycl
 
 void VM_exec_func(VM *vm, uint32_t func_adr) { exec_setup(vm, func_adr); }
 
-void VM_set_wioproc(VM *vm, uint32_t a, VM_WIOPROC p) { vm->WIOPROC[a] = p; }
+void VM_set_wioproc(VM *vm, uint32_t a, VM_WIOPROC p, void *context) {
+  vm->WIOPROC[a] = p;
+  vm->WIOPROC_CONTEXT[a] = context;
+}
 
 void VM_set_clock(VM *vm, uint32_t clock, double vsync_freq) {
   vm->clock = clock;
@@ -289,7 +292,8 @@ void VM_reset(VM *vm, uint32_t clock, uint32_t init_adr, uint32_t vsync_adr, dou
   LPDETECT_reset(vm->lpde);
 
   memset(vm->IO, 0, sizeof(vm->IO));
-  memset(vm->WIOPROC, 0, sizeof(vm->IO));
+  memset(vm->WIOPROC, 0, sizeof(vm->WIOPROC));
+  memset(vm->WIOPROC_CONTEXT, 0, sizeof(vm->WIOPROC_CONTEXT));
   vm->DA1 = 0;
   vm->DA8 = 0;
   vm->DA8_enable = DA8;
@@ -425,6 +429,10 @@ void VM_load_state(VM *vm, const uint8_t *in, int size) {
   void *iowctx = vm->iowrite_handler_context, *mewctx = vm->memwrite_handler_context;
   void (*iowh)(void *, uint32_t, uint32_t) = vm->iowrite_handler;
   void (*mewh)(void *, uint32_t, uint32_t) = vm->memwrite_handler;
+  VM_WIOPROC wioproc[0x100];
+  void *wioproc_context[0x100];
+  memcpy(wioproc, vm->WIOPROC, sizeof(wioproc));
+  memcpy(wioproc_context, vm->WIOPROC_CONTEXT, sizeof(wioproc_context));
 
   if (size < (int)sizeof(VM)) return;
   memcpy(vm, in, sizeof(VM));
@@ -442,6 +450,10 @@ void VM_load_state(VM *vm, const uint8_t *in, int size) {
   vm->iowrite_handler_context = iowctx;
   vm->memwrite_handler = mewh;
   vm->memwrite_handler_context = mewctx;
+  /* the write-I/O hooks point at THIS instance's owner, so never take the
+     snapshot's table: it carries the pointers of whoever saved the state */
+  memcpy(vm->WIOPROC, wioproc, sizeof(vm->WIOPROC));
+  memcpy(vm->WIOPROC_CONTEXT, wioproc_context, sizeof(vm->WIOPROC_CONTEXT));
 
   /* Re-bind the CPU context to THIS instance. The opcode tables and sysmem
      callbacks copied in are process-global (static), so they stay valid; only

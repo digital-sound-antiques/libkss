@@ -22,6 +22,11 @@ extern "C" {
 #define KSSPLAY_MUTE (1 << KSSPLAY_VOL_BITS)
 #define KSSPLAY_VOL_MASK ((1 << KSSPLAY_VOL_BITS) - 1)
 
+/* MGSDRV `@m` text: the console is 80 columns wide, the buffer keeps a
+   margin on top of it. KSSPLAY_get_MGStext never returns more than this. */
+#define KSSPLAY_MGSTEXT_COLUMNS 80
+#define KSSPLAY_MGSTEXT_SIZE 256
+
 typedef struct tagKSSPLAY KSSPLAY;
 struct tagKSSPLAY {
   KSS *kss;
@@ -62,6 +67,10 @@ struct tagKSSPLAY {
   int opll_stereo;
 
   PSG_RateConv *psg_rconv;
+
+  /* MGSDRV `@m` text, assembled from the writes to I/O 0x43/0x44 */
+  int mgs_text_pos;
+  char mgs_text[KSSPLAY_MGSTEXT_SIZE];
 
   int32_t psg_ch_pan[3];  /* per-channel PSG panning (-128..128), 0 = center */
   int32_t scc_ch_pan[5];  /* per-channel SCC panning (-128..128), 0 = center */

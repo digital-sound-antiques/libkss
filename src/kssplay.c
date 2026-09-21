@@ -13,11 +13,21 @@
 
 static int32_t volume_table[1 << KSSPLAY_VOL_BITS];
 
-static int mgs_pos = 0;
-static char mgs_text[256];
-static int mgs_text_update(VM *vm, uint32_t a, uint32_t d) {
+/* For historical reasons this resolves the control codes of MGSEL's lyric
+   console rather than just reporting the `@m` bytes: what it keeps is one
+   80-column line of that screen, with the cursor moved by 0x01 (home) and
+   0x02/0x03 (locate). 
+   A host that wants to render `@m` its own way should not go through
+   KSSPLAY_get_MGStext: latch the writes to I/O 0x43/0x44 with
+   KSSPLAY_set_iowrite_handler (it runs before this one, and before the
+   ADRLIO/ADRHIO gate) and read the string with KSSPLAY_read_memory. */
+static int mgs_text_update(VM *vm, uint32_t a, uint32_t d, void *context) {
+  KSSPLAY *kssplay = (KSSPLAY *)context;
   char buf[128] = "";
   int adr, i, j;
+
+  if (kssplay == NULL)
+    return 0;
 
   adr = vm->IO[0x43] + (vm->IO[0x44] << 8);
 
@@ -33,27 +43,30 @@ static int mgs_text_update(VM *vm, uint32_t a, uint32_t d) {
     for (i = 0; i < 127 && buf[i] != '\0'; i++) {
       switch (buf[i]) {
       case 0x2:
-        mgs_pos = ((unsigned char)buf[++i]) % 80;
+        kssplay->mgs_text_pos = ((unsigned char)buf[++i]) % KSSPLAY_MGSTEXT_COLUMNS;
         break;
 
       case 0x3:
-        mgs_pos = ((unsigned char)buf[++i]) % 80;
-        for (j = 0; j < mgs_pos; j++)
-          mgs_text[j] = ' ';
+        kssplay->mgs_text_pos = ((unsigned char)buf[++i]) % KSSPLAY_MGSTEXT_COLUMNS;
+        for (j = 0; j < kssplay->mgs_text_pos; j++)
+          kssplay->mgs_text[j] = ' ';
         break;
 
       case 0x1:
-        mgs_pos = 0;
+        kssplay->mgs_text_pos = 0;
         break;
 
       default:
-        mgs_text[mgs_pos++] = buf[i];
+        /* Nothing but the codes above rewinds the cursor, so a text that uses
+           none of them advances it for the whole song: bound it here. */
+        if (kssplay->mgs_text_pos < KSSPLAY_MGSTEXT_COLUMNS)
+          kssplay->mgs_text[kssplay->mgs_text_pos++] = buf[i];
         break;
       }
     }
 
-    mgs_text[mgs_pos] = '\0';
-    mgs_text[80] = '\0';
+    kssplay->mgs_text[kssplay->mgs_text_pos] = '\0';
+    kssplay->mgs_text[KSSPLAY_MGSTEXT_COLUMNS] = '\0';
   }
 
   return 0;
@@ -139,7 +152,7 @@ static uint32_t getclk(KSSPLAY *kssplay) {
 }
 
 void KSSPLAY_get_MGStext(KSSPLAY *kssplay, char *buf, int max) {
-  strncpy(buf, mgs_text, max);
+  strncpy(buf, kssplay->mgs_text, max);
   buf[max - 1] = '\0';
 }
 
@@ -207,9 +220,10 @@ void KSSPLAY_reset(KSSPLAY *kssplay, uint32_t song, uint32_t cpu_speed) {
   kssplay->silent = 0;
 
   if (kssplay->kss->type == MGSDATA) {
-    VM_set_wioproc(kssplay->vm, 0x44, mgs_text_update);
+    VM_set_wioproc(kssplay->vm, 0x44, mgs_text_update, kssplay);
   }
-  memset(mgs_text, 0, 128);
+  kssplay->mgs_text_pos = 0;
+  memset(kssplay->mgs_text, 0, sizeof(kssplay->mgs_text));
 
   PSG_RateConv_reset(kssplay->psg_rconv, kssplay->vm->psg, kssplay->rate);
 
@@ -229,7 +243,8 @@ void KSSPLAY_reset(KSSPLAY *kssplay, uint32_t song, uint32_t cpu_speed) {
    device type, filters, rate/nch/bps) is intentionally excluded so a load keeps
    the current settings rather than reverting them. */
 #define KSSPLAY_STATE_FIELDS(X) \
-  X(step_cnt) X(step_inc) X(fade) X(fade_step) X(fade_flag) X(silent) X(decoded_length) X(lastout)
+  X(step_cnt) X(step_inc) X(fade) X(fade_step) X(fade_flag) X(silent) X(decoded_length) X(lastout) \
+  X(mgs_text_pos) X(mgs_text)
 
 int KSSPLAY_save_state(KSSPLAY *kssplay, uint8_t *out) {
   int n = 0;
