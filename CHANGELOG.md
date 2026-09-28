@@ -1,3 +1,8 @@
+# 1.3.3 (2026-09-29)
+- Added `KSSPLAY_calc_silent_accurate`. It works like `KSSPLAY_calc_silent`
+  but also clocks OPL, OPLL and PSG, so a state saved after a silent run
+  matches real playback. `KSSPLAY_calc_silent` is unchanged.
+
 # 1.3.2 (2026-09-28)
 - Fixed a buffer overflow in the MGSDRV `@m` text handler. It could overwrite
   the volume table, which turned the output into noise until the process
