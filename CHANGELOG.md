@@ -1,3 +1,11 @@
+# 1.3.2 (2026-09-28)
+- Fixed a buffer overflow in the MGSDRV `@m` text handler. It could overwrite
+  the volume table, which turned the output into noise until the process
+  restarted.
+- Fixed a buffer overflow in the MGS/BGM/MPK converters when the song is
+  larger than the driver layout allows.
+- Updated emu2413 to 1.6.2.
+
 # 1.3.1 (2026-09-07)
 - Updated emu2413 to 1.6.1.
 - Updated emu8950 to 1.2.1.
