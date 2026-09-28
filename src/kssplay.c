@@ -792,10 +792,28 @@ void KSSPLAY_calc_with_per_ch(KSSPLAY *kssplay, int16_t *buf, KSSPLAY_PER_CH_OUT
   LPDETECT_update(kssplay->vm->lpde, kssplay->decoded_length * 1000 / kssplay->rate, 30 * 1000, 1000);
 }
 
-void KSSPLAY_calc_silent(KSSPLAY *kssplay, uint32_t length) {
+static void calc_silent(KSSPLAY *kssplay, uint32_t length, int clock_devices) {
   uint32_t i;
   for (i = 0; i < length; i++) {
     process_vm(kssplay);
+    if (!clock_devices) {
+      continue;
+    }
+    /* clock the devices with envelopes exactly as calc does (output discarded), so a state saved after
+       a silent run matches real playback. SCC has no envelope, so it is left unclocked. */
+    if (kssplay->kss->msx_audio && !kssplay->device_mute[KSS_DEVICE_OPL]) {
+      OPL_calc(kssplay->vm->opl);
+    }
+    if (kssplay->kss->fmpac && !kssplay->device_mute[KSS_DEVICE_OPLL]) {
+      OPLL_calc(kssplay->vm->opll);
+    }
+    if (!kssplay->device_mute[KSS_DEVICE_PSG]) {
+      if (kssplay->kss->sn76489) {
+        SNG_calc(kssplay->vm->sng);
+      } else {
+        PSG_RateConv_calc(kssplay->psg_rconv);
+      }
+    }
   }
   kssplay->decoded_length += length;
   LPDETECT_update(kssplay->vm->lpde, kssplay->decoded_length * 1000 / kssplay->rate, 30 * 1000, 1000);
@@ -809,6 +827,10 @@ void KSSPLAY_calc_silent(KSSPLAY *kssplay, uint32_t length) {
     }
   }
 }
+
+void KSSPLAY_calc_silent(KSSPLAY *kssplay, uint32_t length) { calc_silent(kssplay, length, 0); }
+
+void KSSPLAY_calc_silent_accurate(KSSPLAY *kssplay, uint32_t length) { calc_silent(kssplay, length, 1); }
 
 int KSSPLAY_get_loop_count(KSSPLAY *kssplay) {
   if (kssplay->kss->type == KSSDATA) {

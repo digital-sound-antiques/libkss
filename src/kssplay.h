@@ -133,6 +133,11 @@ void KSSPLAY_calc(KSSPLAY *, int16_t *buf, uint32_t length);
 /* Calcurate samples internally. No output is generated. */
 void KSSPLAY_calc_silent(KSSPLAY *, uint32_t length);
 
+/* Like KSSPLAY_calc_silent, but also clocks the devices that have envelopes (OPL, OPLL, PSG/SNG) exactly
+   as KSSPLAY_calc does, so a state saved with KSSPLAY_save_state after a silent run matches real playback.
+   Slower than KSSPLAY_calc_silent, since it runs the device synthesis. */
+void KSSPLAY_calc_silent_accurate(KSSPLAY *, uint32_t length);
+
 /* Save/restore the playback state (for seek / keyframe checkpoints): the KSSPLAY
    playback progress plus the whole VM (CPU, sound chips and RAM). Host settings
    (volume/mute/pan/type/filters) are not included, so a load keeps them; the
