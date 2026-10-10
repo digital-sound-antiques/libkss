@@ -1,4 +1,4 @@
-# Unreleased
+# 1.3.4 (2026-10-11)
 - Updated emu2413 to 1.6.4 and emu8950 to 1.2.3.
   - No float/double arithmetic in the per-sample path, for CPUs without an FPU.
   - Faster and more accurate rate converter.
