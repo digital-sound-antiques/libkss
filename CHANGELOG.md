@@ -1,3 +1,10 @@
+# Unreleased
+- Updated emu2413 to 1.6.4 and emu8950 to 1.2.3.
+  - No float/double arithmetic in the per-sample path, for CPUs without an FPU.
+  - Faster and more accurate rate converter.
+  - Fixed the OPLL stereo output resampling L and R at different positions.
+  - The save state format has changed.
+
 # 1.3.3 (2026-09-29)
 - Added `KSSPLAY_calc_silent_accurate`. It works like `KSSPLAY_calc_silent`
   but also clocks OPL, OPLL and PSG, so a state saved after a silent run
